@@ -13,32 +13,18 @@ Tile::Tile(int x, int y, std::string colour)
     : x(x), y(y), colour(colour), visited(false) {}
 
 // Getters for x and y
-int Tile::getX() const {
-    return this->x;
-}
+int Tile::getX() const { return this->x; }
 
-int Tile::getY() const {
-    return this->y;
-}
+int Tile::getY() const { return this->y; }
 
 // Getter and setter for colour
-std::string Tile::getColour() const {
-    return this->colour;
-}
+std::string Tile::getColour() const { return this->colour; }
 
-void Tile::setColour(std::string colour) {
-    this->colour = colour;
-}
+void Tile::setColour(std::string colour) { this->colour = colour; }
 
 // Visit-related methods
-void Tile::visit() {
-    this->visited = true;
-}
+void Tile::visit() { this->visited = true; }
 
-bool Tile::isVisited() const {
-    return this->visited;
-}
+bool Tile::isVisited() const { return this->visited; }
 
-void Tile::clearVisit() {
-    this->visited = false;
-}
+void Tile::clearVisit() { this->visited = false; }

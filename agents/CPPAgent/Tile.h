@@ -5,38 +5,38 @@
 #ifndef TILE_H
 #define TILE_H
 
-#include<string>
-#include<vector>
+#include <string>
+#include <vector>
 
 class Tile {
 public:
-    // Constants for neighbour count and displacements
-    static const int NEIGHBOUR_COUNT;
-    static const std::vector<int> I_DISPLACEMENTS;
-    static const std::vector<int> J_DISPLACEMENTS;
+  // Constants for neighbour count and displacements
+  static const int NEIGHBOUR_COUNT;
+  static const std::vector<int> I_DISPLACEMENTS;
+  static const std::vector<int> J_DISPLACEMENTS;
 
 private:
-    int x;
-    int y;
-    std::string colour;
-    bool visited;
+  int x;
+  int y;
+  std::string colour;
+  bool visited;
 
 public:
-    // Constructor
-    Tile(int x, int y, std::string colour = "");
+  // Constructor
+  Tile(int x, int y, std::string colour = "");
 
-    // Getters for x and y
-    int getX() const;
-    int getY() const;
+  // Getters for x and y
+  int getX() const;
+  int getY() const;
 
-    // Getter and setter for colour
-    std::string getColour() const;
-    void setColour(std::string colour);
+  // Getter and setter for colour
+  std::string getColour() const;
+  void setColour(std::string colour);
 
-    // Visit-related methods
-    void visit();
-    bool isVisited() const;
-    void clearVisit();
+  // Visit-related methods
+  void visit();
+  bool isVisited() const;
+  void clearVisit();
 };
 
-#endif //TILE_H
+#endif // TILE_H
