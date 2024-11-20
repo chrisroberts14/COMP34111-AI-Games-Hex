@@ -43,10 +43,8 @@ class NaiveAgent(AgentBase):
         if opp_move is not None and opp_move.x != -1:
             self._choices.remove((opp_move.x, opp_move.y))
 
-        # if turn == 2 and choice([0, 1]) == 1:
         if turn == 2:
             return Move(-1, -1)
-        else:
-            x, y = choice(self._choices)
-            self._choices.remove((x, y))
-            return Move(x, y)
+        x, y = choice(self._choices)
+        self._choices.remove((x, y))
+        return Move(x, y)

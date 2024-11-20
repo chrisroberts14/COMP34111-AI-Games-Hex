@@ -60,10 +60,10 @@ if __name__ == "__main__":
     def run_game(game):
         result = game.run()
         print("Game finished")
-        print(f"Win method: {result['win_method']}")
+        print(f"Winner: {result["winner"]}, Win method: {result['win_method']}")
         return result["winner"]
 
-    games = [Game(
+    games_p1_first = [Game(
         player1=Player(
             name=args.player1Name,
             agent=getattr(p1, p1_class)(Colour.RED),
@@ -72,7 +72,21 @@ if __name__ == "__main__":
             name=args.player2Name,
             agent=getattr(p2, p2_class)(Colour.BLUE),
         ),
-    ) for _ in range(args.num_games)]
+    ) for _ in range(args.num_games // 2)]
+    games_p2_first = [
+        Game(
+            player1=Player(
+                name=args.player2Name,
+                agent=getattr(p2, p2_class)(Colour.RED),
+            ),
+            player2=Player(
+                name=args.player1Name,
+                agent=getattr(p1, p1_class)(Colour.BLUE),
+            ),
+        )
+        for _ in range(args.num_games // 2)
+    ]
+    games = games_p1_first + games_p2_first
     with concurrent.futures.ProcessPoolExecutor() as executor:
         results = list(executor.map(run_game, games))
 

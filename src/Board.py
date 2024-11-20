@@ -137,7 +137,7 @@ class Board:
         """
         Print the board with colours using rich to colour the characters
         """
-        console = Console()
+        console = Console(color_system="windows")
         output = ""
         leading_spaces = ""
         for line in self._tiles:
