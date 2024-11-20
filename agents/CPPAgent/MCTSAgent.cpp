@@ -39,13 +39,13 @@ convert_board_string(const std::string &board_string, const int boardSize) {
 MCTSAgent::MCTSAgent(const std::string &agentColour, int gameBoardSize)
     : colour(agentColour), turn(0), boardSize(gameBoardSize) {}
 
-std::string MCTSAgent::getMessage() {
+inline std::string MCTSAgent::getMessage() {
   std::string message;
   std::getline(std::cin, message);
   return message;
 }
 
-void MCTSAgent::sendMessage(const std::string &msg) {
+inline void MCTSAgent::sendMessage(const std::string &msg) {
   std::cout << msg << std::endl;
   std::cout.flush();
 }
@@ -53,8 +53,7 @@ void MCTSAgent::sendMessage(const std::string &msg) {
 void MCTSAgent::run() {
   while (true) {
     try {
-      std::string msg;
-      msg = getMessage();
+      std::string msg = getMessage();
       if (!interpretMessage(msg)) {
         return;
       }
@@ -65,8 +64,6 @@ void MCTSAgent::run() {
 }
 
 bool MCTSAgent::interpretMessage(const std::string &s) {
-  turn += 2;
-
   std::string trimmed = s;
   trimmed.erase(trimmed.find_last_not_of(" \n\r\t") + 1);
 
@@ -78,9 +75,10 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
   }
 
   std::string board = msg[2];
+  turn = std::stoi(msg[3]);
   if (msg[0] == "START") {
     if (colour == "R") {
-      makeMove(board);
+        makeMove(board);
     }
   } else if (msg[0] == "CHANGE") {
     makeMove(board);
@@ -144,7 +142,7 @@ void MCTSAgent::makeMove(const std::string &board) {
   MCTSNode root(brd, colour, nullptr, {-1, -1});
   root.generate_all_children_nodes();
   std::chrono::steady_clock::time_point end_time =
-      std::chrono::steady_clock::now() + std::chrono::milliseconds(4500);
+      std::chrono::steady_clock::now() + std::chrono::milliseconds(10000);
   run_mcts_in_parallel(&root, colour, end_time, root.get_children_size());
 
   std::pair<int, int> best_move = root.get_best_move();

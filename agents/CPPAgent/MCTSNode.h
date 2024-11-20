@@ -37,7 +37,6 @@ public:
   std::pair<int, int> get_best_move();
   MCTSNode *get_child(int index);
   int get_children_size();
-  double get_exploitation_score();
 };
 
 #endif // MCTSNODE_H

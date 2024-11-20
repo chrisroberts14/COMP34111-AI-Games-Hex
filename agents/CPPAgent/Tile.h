@@ -19,7 +19,6 @@ private:
   int x;
   int y;
   std::string colour;
-  bool visited;
 
 public:
   // Constructor
@@ -32,11 +31,6 @@ public:
   // Getter and setter for colour
   std::string getColour() const;
   void setColour(std::string colour);
-
-  // Visit-related methods
-  void visit();
-  bool isVisited() const;
-  void clearVisit();
 };
 
 #endif // TILE_H
