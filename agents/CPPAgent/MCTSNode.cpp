@@ -16,13 +16,7 @@
 
 #define DECAY_RATE -0.05
 
-std::string opp(const std::string &c) {
-  if (c == "R")
-    return "B";
-  if (c == "B")
-    return "R";
-  return "None";
-}
+inline std::string opp(const std::string &c) { return c == "R" ? "B" : "R"; }
 
 std::vector<std::pair<int, int>> get_valid_moves(const std::string state,
                                                  const int boardSize) {
@@ -92,7 +86,7 @@ std::string MCTSNode::has_ended() {
 
   // Check red tiles
   for (const auto &tile : red_tiles) {
-    if (visited.find({tile.getX(), tile.getY()}) == visited.end()) {
+    if (visited.insert({tile.getX(), tile.getY()}).second) {
       if (DFSColour(0, tile.getY(), "R", visited) == "R") {
         return "R";
       }
@@ -101,7 +95,7 @@ std::string MCTSNode::has_ended() {
 
   // Check blue tiles
   for (const auto &tile : blue_tiles) {
-    if (visited.find({tile.getX(), tile.getY()}) == visited.end()) {
+    if (visited.insert({tile.getX(), tile.getY()}).second) {
       if (DFSColour(tile.getX(), 0, "B", visited) == "B") {
         return "B";
       }
@@ -121,21 +115,21 @@ std::string MCTSNode::DFSColour(int x, int y, const std::string &colour,
   visited.insert({x, y});
 
   while (!stack.empty()) {
-    auto [cx, cy] = stack.top();
+    std::pair<int, int> coordinate = stack.top();
     stack.pop();
 
     // Win conditions
-    if (colour == "R" && cx == size - 1) {
+    if (colour == "R" && coordinate.first == size - 1) {
       return "R";
     }
-    if (colour == "B" && cy == size - 1) {
+    if (colour == "B" && coordinate.second == size - 1) {
       return "B";
     }
 
     // Visit neighbours
     for (int i = 0; i < Tile::NEIGHBOUR_COUNT; ++i) {
-      int x_n = cx + Tile::I_DISPLACEMENTS[i];
-      int y_n = cy + Tile::J_DISPLACEMENTS[i];
+      int x_n = coordinate.first + Tile::I_DISPLACEMENTS[i];
+      int y_n = coordinate.second + Tile::J_DISPLACEMENTS[i];
 
       if (x_n >= 0 && x_n < size && y_n >= 0 && y_n < size) {
         if (visited.find({x_n, y_n}) == visited.end() &&
@@ -174,8 +168,7 @@ double MCTSNode::simulate_from_node(std::string &current_colour) {
     this->state.make_move(move, current_colour);
     winner = this->has_ended();
     if (winner != "") {
-      for (int j = 0; j < (int)moves_taken.size(); j++) {
-        std::pair<int, int> move = moves_taken[j];
+      for (std::pair<int, int> move : moves_taken) {
         this->state.make_move(move, "0");
       }
       return (std::exp((long double)(DECAY_RATE * moves_taken.size())) *
@@ -209,7 +202,3 @@ MCTSNode *MCTSNode::best_child(float c) {
 MCTSNode *MCTSNode::get_child(int index) { return this->children[index]; }
 
 int MCTSNode::get_children_size() { return this->children.size(); }
-
-double MCTSNode::get_exploitation_score() {
-  return this->payoff_sum / this->visits;
-}
