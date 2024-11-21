@@ -23,7 +23,7 @@ class ExternalAgent(AgentBase):
         # - 11, which is the size of the board
         log = open('some file.txt', 'a')
         self.agent_process = Popen(
-            ["agents/CPPAgent/CPPAgent", colour.get_char(), "11"],
+            ["agents/Group25/CPPAgent", colour.get_char(), "11"],
             stdout=PIPE,
             stdin=PIPE,
             stderr=log,

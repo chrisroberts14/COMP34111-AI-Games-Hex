@@ -1,9 +1,9 @@
 import pytest
 
-from agents.Group25.tests.conftest import blue_win_board
+from agents.Group25Python.tests.conftest import blue_win_board
 from src.Board import Board
 from src.Colour import Colour
-from agents.Group25.MCTSAgent import MCTSNode, get_valid_moves, get_opponent_colour, MCTSAgent
+from agents.Group25Python.MCTSAgent import MCTSNode, get_valid_moves, get_opponent_colour, MCTSAgent
 
 
 class TestHelperMethods:
