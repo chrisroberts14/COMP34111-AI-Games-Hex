@@ -162,4 +162,3 @@ cython_debug/
 #.idea/
 
 *.o
-/agents/CPPAgent2/
