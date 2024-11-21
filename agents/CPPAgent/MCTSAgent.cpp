@@ -92,43 +92,6 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
   return true;
 }
 
-void simulate_iterations(std::atomic<int> &iterations, MCTSNode *root,
-                         std::string colour,
-                         std::chrono::steady_clock::time_point end_time,
-                         int thread_number) {
-  int local_iterations = 0;
-  MCTSNode *node = root->get_child(thread_number);
-  while (std::chrono::steady_clock::now() < end_time) {
-    local_iterations++;
-    double result = node->simulate_from_node(colour);
-    node->backpropagate(result);
-  }
-  iterations.fetch_add(local_iterations,
-                       std::memory_order_relaxed); // Increment safely
-}
-
-void run_mcts_in_parallel(MCTSNode *root, const std::string &colour,
-                          std::chrono::steady_clock::time_point end_time,
-                          int num_threads) {
-  std::atomic<int> iterations(0); // Atomic variable to safely track iterations
-
-  // Create a vector of threads
-  std::vector<std::thread> threads;
-
-  // Launch the threads
-  for (int i = 0; i < num_threads; ++i) {
-    threads.push_back(std::thread(simulate_iterations, std::ref(iterations),
-                                  root, colour, end_time, i));
-  }
-
-  // Wait for all threads to finish
-  for (auto &t : threads) {
-    t.join();
-  }
-
-  std::cerr << "Total iterations: " << iterations.load() << std::endl;
-}
-
 void MCTSAgent::makeMove(const std::string &board) {
   std::cerr << turn << std::endl;
   if (turn == 2) {
@@ -143,7 +106,11 @@ void MCTSAgent::makeMove(const std::string &board) {
   root.generate_all_children_nodes();
   std::chrono::steady_clock::time_point end_time =
       std::chrono::steady_clock::now() + std::chrono::milliseconds(10000);
-  run_mcts_in_parallel(&root, colour, end_time, root.get_children_size());
+  while (std::chrono::steady_clock::now() < end_time) {
+    MCTSNode* node = root.best_child(EXPLORATION_CONSTANT);
+    double result = node->simulate_from_node(colour);
+    node->backpropagate(result);
+  }
 
   std::pair<int, int> best_move = root.get_best_move();
   sendMessage(std::to_string(best_move.first) + "," +
