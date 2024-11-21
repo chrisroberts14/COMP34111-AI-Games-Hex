@@ -27,7 +27,7 @@ public:
   MCTSNode(const Board &state, const std::string colour, MCTSNode *parent,
            std::pair<int, int> move);
 
-  void backpropagate(double result, int visits=1);
+  void backpropagate(double result, int visits = 1);
   std::string has_ended();
   std::string DFSColour(int i, int j, const std::string &colour,
                         std::set<std::pair<int, int>> &visited);

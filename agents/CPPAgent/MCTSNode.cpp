@@ -17,7 +17,7 @@
 #define DECAY_RATE -0.05
 #include <iostream>
 
-auto rng = std::default_random_engine {};
+auto rng = std::default_random_engine{};
 
 inline std::string opp(const std::string &c) { return c == "R" ? "B" : "R"; }
 

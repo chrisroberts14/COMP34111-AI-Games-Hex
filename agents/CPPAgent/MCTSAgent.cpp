@@ -6,12 +6,12 @@
 #include "Board.h"
 #include "MCTSNode.h"
 #include <atomic>
+#include <future>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
-#include <future>
 
 #define DECAY_RATE -0.05
 #define EXPLORATION_CONSTANT 1.41
@@ -59,12 +59,13 @@ void MCTSAgent::run() {
   while (true) {
     try {
       std::string msg = getMessage();
-      //std::string msg = "CHANGE;0,0;RRRRBBRBRRR,RBRBRBRB000,RBRRR0RBB00,RRR00RB0000,RRBBRBBB000,RRBRB0R0000,0R0RBBBBB0B,BB0R0B000R0,00BRRB0BB00,BBBRBR0B000,0RBBR00B0R0;5;\n";
+      // std::string msg =
+      // "CHANGE;0,0;RRRRBBRBRRR,RBRBRBRB000,RBRRR0RBB00,RRR00RB0000,RRBBRBBB000,RRBRB0R0000,0R0RBBBBB0B,BB0R0B000R0,00BRRB0BB00,BBBRBR0B000,0RBBR00B0R0;5;\n";
       if (!interpretMessage(msg)) {
         std::cerr << "PROBLEM INTERPRETING MESSAGE" << std::endl;
         return;
       }
-      //return;
+      // return;
     } catch (const std::exception &e) {
       return;
     }
@@ -86,7 +87,7 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
   turn = std::stoi(msg[3]);
   if (msg[0] == "START") {
     if (colour == "R") {
-        makeMove(board);
+      makeMove(board);
     }
   } else if (msg[0] == "CHANGE") {
     makeMove(board);
@@ -101,9 +102,10 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
 }
 
 void MCTSAgent::makeMove(const std::string &board) {
-  int move_start_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::steady_clock::now().time_since_epoch())
-      .count();
+  int move_start_time_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::steady_clock::now().time_since_epoch())
+          .count();
 
   if (turn == 2) {
     sendMessage("-1,-1");
@@ -125,28 +127,36 @@ void MCTSAgent::makeMove(const std::string &board) {
   Board brd(boardState, boardSize, "");
   MCTSNode root(brd, colour, nullptr, {-1, -1});
   root.generate_all_children_nodes();
-  long loop_start_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-  while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() - loop_start_time < turn_time) {
-    MCTSNode* node = root.best_child(EXPLORATION_CONSTANT);
+  long loop_start_time =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::steady_clock::now().time_since_epoch())
+          .count();
+  while (std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::steady_clock::now().time_since_epoch())
+                 .count() -
+             loop_start_time <
+         turn_time) {
+    MCTSNode *node = root.best_child(EXPLORATION_CONSTANT);
     // Run this method N times and backpropagate the results
     std::vector<std::thread> threads;
     std::vector<std::future<double>> futures;
     for (int i = 0; i < THREAD_COUNT; i++) {
       std::promise<double> promise;
       futures.push_back(promise.get_future());
-      threads.emplace_back([&node, promise = std::move(promise), this]() mutable {
-        double result = node->simulate_from_node(colour);
-        promise.set_value(result);
-      });
+      threads.emplace_back(
+          [&node, promise = std::move(promise), this]() mutable {
+            double result = node->simulate_from_node(colour);
+            promise.set_value(result);
+          });
     }
-	// Wait for threads to finish
+    // Wait for threads to finish
     for (std::thread &t : threads) {
       t.join();
     }
     // Get results from the threads and sum them
     double result = 0;
     for (auto &future : futures) {
-        result += future.get();
+      result += future.get();
     }
     node->backpropagate(result, THREAD_COUNT);
   }
@@ -156,9 +166,10 @@ void MCTSAgent::makeMove(const std::string &board) {
   sendMessage(std::to_string(best_move.first) + "," +
               std::to_string(best_move.second));
 
-  int move_end_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::steady_clock::now().time_since_epoch())
-      .count();
+  int move_end_time_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::steady_clock::now().time_since_epoch())
+          .count();
 
   time_left_ms -= (move_end_time_ms - move_start_time_ms);
   std::cerr << "Time left: " << time_left_ms << std::endl;
