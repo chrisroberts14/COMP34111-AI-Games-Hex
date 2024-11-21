@@ -16,6 +16,9 @@
 #define DECAY_RATE -0.05
 #define EXPLORATION_CONSTANT 1.41
 #define THREAD_COUNT 32
+#define TIME_LIMIT 290
+
+int time_left_ms = TIME_LIMIT * 1000;
 
 std::vector<std::vector<Tile>>
 convert_board_string(const std::string &board_string, const int boardSize) {
@@ -98,9 +101,23 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
 }
 
 void MCTSAgent::makeMove(const std::string &board) {
+  int move_start_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::steady_clock::now().time_since_epoch())
+      .count();
+
   if (turn == 2) {
     sendMessage("-1,-1");
     return;
+  }
+
+  int turn_time = 5000;
+  // Calculate time to run MCTS
+  // Give 5 seconds of buffer time so total time is 290 seconds
+  if (turn < 20) {
+    // Use exponential decay to calculate time
+    turn_time = time_left_ms * 0.15;
+  } else {
+    turn_time = time_left_ms / (turn - 15);
   }
   std::vector<std::vector<Tile>> boardState =
       convert_board_string(board, boardSize);
@@ -108,9 +125,8 @@ void MCTSAgent::makeMove(const std::string &board) {
   Board brd(boardState, boardSize, "");
   MCTSNode root(brd, colour, nullptr, {-1, -1});
   root.generate_all_children_nodes();
-  std::chrono::steady_clock::time_point end_time =
-      std::chrono::steady_clock::now() + std::chrono::milliseconds(10000);
-  while (std::chrono::steady_clock::now() < end_time) {
+  long loop_start_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+  while (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() - loop_start_time < turn_time) {
     MCTSNode* node = root.best_child(EXPLORATION_CONSTANT);
     // Run this method N times and backpropagate the results
     std::vector<std::thread> threads;
@@ -139,4 +155,11 @@ void MCTSAgent::makeMove(const std::string &board) {
   root.delete_children();
   sendMessage(std::to_string(best_move.first) + "," +
               std::to_string(best_move.second));
+
+  int move_end_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::steady_clock::now().time_since_epoch())
+      .count();
+
+  time_left_ms -= (move_end_time_ms - move_start_time_ms);
+  std::cerr << "Time left: " << time_left_ms << std::endl;
 }
