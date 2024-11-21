@@ -5,20 +5,20 @@
 #include "MCTSAgent.h"
 #include "Board.h"
 #include "MCTSNode.h"
-#include <atomic>
 #include <future>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
-#define DECAY_RATE -0.05
+#define DECAY_RATE (-0.05)
 #define EXPLORATION_CONSTANT 1.41
 #define THREAD_COUNT 32
 #define TIME_LIMIT 290
 
-int time_left_ms = TIME_LIMIT * 1000;
+double time_left_ms = TIME_LIMIT * 1000;
 
 std::vector<std::vector<Tile>>
 convert_board_string(const std::string &board_string, const int boardSize) {
@@ -41,8 +41,8 @@ convert_board_string(const std::string &board_string, const int boardSize) {
   return board;
 }
 
-MCTSAgent::MCTSAgent(const std::string &agentColour, int gameBoardSize)
-    : colour(agentColour), turn(0), boardSize(gameBoardSize) {}
+MCTSAgent::MCTSAgent(std::string agentColour, int gameBoardSize)
+    : colour(std::move(agentColour)), turn(0), boardSize(gameBoardSize) {}
 
 inline std::string MCTSAgent::getMessage() {
   std::string message;
@@ -58,15 +58,11 @@ inline void MCTSAgent::sendMessage(const std::string &msg) {
 void MCTSAgent::run() {
   while (true) {
     try {
-      std::string msg = getMessage();
-      // std::string msg =
-      // "CHANGE;0,0;RRRRBBRBRRR,RBRBRBRB000,RBRRR0RBB00,RRR00RB0000,RRBBRBBB000,RRBRB0R0000,0R0RBBBBB0B,BB0R0B000R0,00BRRB0BB00,BBBRBR0B000,0RBBR00B0R0;5;\n";
-      if (!interpretMessage(msg)) {
+      if (std::string msg = getMessage(); !interpretMessage(msg)) {
         std::cerr << "PROBLEM INTERPRETING MESSAGE" << std::endl;
         return;
       }
-      // return;
-    } catch (const std::exception &e) {
+    } catch (const std::exception &_) {
       return;
     }
   }
@@ -83,7 +79,7 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
     msg.push_back(item);
   }
 
-  std::string board = msg[2];
+  const std::string board = msg[2];
   turn = std::stoi(msg[3]);
   if (msg[0] == "START") {
     if (colour == "R") {
@@ -101,8 +97,8 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
   return true;
 }
 
-void MCTSAgent::makeMove(const std::string &board) {
-  int move_start_time_ms =
+void MCTSAgent::makeMove(const std::string &board) const {
+  const long move_start_time_ms =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::steady_clock::now().time_since_epoch())
           .count();
@@ -112,7 +108,7 @@ void MCTSAgent::makeMove(const std::string &board) {
     return;
   }
 
-  int turn_time = 5000;
+  double turn_time;
   // Calculate time to run MCTS
   // Give 5 seconds of buffer time so total time is 290 seconds
   if (turn < 20) {
@@ -124,10 +120,10 @@ void MCTSAgent::makeMove(const std::string &board) {
   std::vector<std::vector<Tile>> boardState =
       convert_board_string(board, boardSize);
 
-  Board brd(boardState, boardSize, "");
+  const Board brd(boardState, boardSize, "");
   MCTSNode root(brd, colour, nullptr, {-1, -1});
   root.generate_all_children_nodes();
-  long loop_start_time =
+  const long loop_start_time =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::steady_clock::now().time_since_epoch())
           .count();
@@ -135,7 +131,7 @@ void MCTSAgent::makeMove(const std::string &board) {
              std::chrono::steady_clock::now().time_since_epoch())
                  .count() -
              loop_start_time <
-         turn_time) {
+         static_cast<long>(turn_time)) {
     MCTSNode *node = root.best_child(EXPLORATION_CONSTANT);
     // Run this method N times and backpropagate the results
     std::vector<std::thread> threads;
@@ -145,7 +141,7 @@ void MCTSAgent::makeMove(const std::string &board) {
       futures.push_back(promise.get_future());
       threads.emplace_back(
           [&node, promise = std::move(promise), this]() mutable {
-            double result = node->simulate_from_node(colour);
+            const double result = node->simulate_from_node(colour);
             promise.set_value(result);
           });
     }
@@ -166,11 +162,11 @@ void MCTSAgent::makeMove(const std::string &board) {
   sendMessage(std::to_string(best_move.first) + "," +
               std::to_string(best_move.second));
 
-  int move_end_time_ms =
+  const long move_end_time_ms =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::steady_clock::now().time_since_epoch())
           .count();
 
-  time_left_ms -= (move_end_time_ms - move_start_time_ms);
+  time_left_ms -= static_cast<double>(move_end_time_ms - move_start_time_ms);
   std::cerr << "Time left: " << time_left_ms << std::endl;
 }
