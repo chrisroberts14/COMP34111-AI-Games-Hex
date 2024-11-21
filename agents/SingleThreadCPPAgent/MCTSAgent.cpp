@@ -93,7 +93,6 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
 }
 
 void MCTSAgent::makeMove(const std::string &board) {
-  int iter = 0;
   if (turn == 2) {
     sendMessage("-1,-1");
     return;
@@ -110,13 +109,10 @@ void MCTSAgent::makeMove(const std::string &board) {
     MCTSNode* node = root.best_child(EXPLORATION_CONSTANT);
     double result = node->simulate_from_node(colour);
     node->backpropagate(result);
-    iter++;
   }
 
-  std::cerr << "Single threaded iterations: " << iter << std::endl;
-
   std::pair<int, int> best_move = root.get_best_move();
-  //root.delete_children();
+  root.delete_children();
   sendMessage(std::to_string(best_move.first) + "," +
               std::to_string(best_move.second));
 }

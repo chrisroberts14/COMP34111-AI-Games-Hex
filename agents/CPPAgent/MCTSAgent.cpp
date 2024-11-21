@@ -98,7 +98,6 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
 }
 
 void MCTSAgent::makeMove(const std::string &board) {
-  int iter = 0;
   if (turn == 2) {
     sendMessage("-1,-1");
     return;
@@ -134,9 +133,7 @@ void MCTSAgent::makeMove(const std::string &board) {
         result += future.get();
     }
     node->backpropagate(result, THREAD_COUNT);
-    iter += THREAD_COUNT;
   }
-  std::cerr << "Multi-threaded iterations: " << iter << std::endl;
 
   std::pair<int, int> best_move = root.get_best_move();
   root.delete_children();
