@@ -8,19 +8,19 @@
 #include <string>
 
 class MCTSAgent {
-private:
   std::string colour;
   int turn;
   int boardSize;
 
 public:
-  MCTSAgent(const std::string &agentColour, int gameBoardSize);
+  MCTSAgent(std::string agentColour, int gameBoardSize);
 
-  std::string getMessage();
-  void sendMessage(const std::string &msg);
+  static std::string getMessage();
+
+  static void sendMessage(const std::string &msg);
   void run();
   bool interpretMessage(const std::string &s);
-  void makeMove(const std::string &board);
+  void makeMove(const std::string &board) const;
 };
 
 #endif // MCTSAGENT_H

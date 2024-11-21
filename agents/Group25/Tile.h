@@ -25,11 +25,11 @@ public:
   Tile(int x, int y, std::string colour = "");
 
   // Getters for x and y
-  int getX() const;
-  int getY() const;
+  [[nodiscard]] int getX() const;
+  [[nodiscard]] int getY() const;
 
   // Getter and setter for colour
-  std::string getColour() const;
+  [[nodiscard]] std::string getColour() const;
   void setColour(std::string colour);
 };
 

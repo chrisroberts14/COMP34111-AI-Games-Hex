@@ -17,15 +17,15 @@ private:
   std::string winner;
 
 public:
-  Board(std::vector<std::vector<Tile>> state_vec, const int &size = 11,
+  explicit Board(std::vector<std::vector<Tile>> state_vec, const int &size = 11,
         std::string winner = "");
-  void make_move(std::pair<int, int> &move, std::string colour);
-  std::vector<std::pair<int, int>> get_moves() const;
+  void make_move(const std::pair<int, int> &move, const std::string &colour);
+  [[nodiscard]] std::vector<std::pair<int, int>> get_moves() const;
   std::vector<std::vector<Tile>> &get_state();
-  Board duplicate();
-  std::string has_ended();
+  [[nodiscard]] Board duplicate() const;
+  [[nodiscard]] std::string has_ended() const;
   std::string DFSColour(int x, int y, const std::string &colour,
-                        std::set<std::pair<int, int>> &visited);
+                        std::set<std::pair<int, int>> &visited) const;
 };
 
 #endif // BOARD_H

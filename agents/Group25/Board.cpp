@@ -7,14 +7,15 @@
 #include <set>
 #include <sstream>
 #include <stack>
+#include <utility>
 
 Board::Board(std::vector<std::vector<Tile>> state_vec, const int &size,
              std::string winner)
-    : state(state_vec), size(size), winner(winner) {}
+    : state(std::move(state_vec)), size(size), winner(std::move(winner)) {}
 
 std::vector<std::vector<Tile>> &Board::get_state() { return this->state; }
 
-void Board::make_move(std::pair<int, int> &move, std::string colour) {
+void Board::make_move(const std::pair<int, int> &move, const std::string &colour) {
   this->state.at(move.first).at(move.second).setColour(colour);
 }
 
@@ -30,12 +31,12 @@ std::vector<std::pair<int, int>> Board::get_moves() const {
   return choices;
 }
 
-Board Board::duplicate() {
+Board Board::duplicate() const {
   return Board(this->state, this->size, this->winner);
 }
 
-std::string Board::has_ended() {
-  int size = 11;
+std::string Board::has_ended() const {
+  constexpr int size = 11;
   std::set<std::pair<int, int>> visited;
 
   std::vector<Tile> red_tiles;
@@ -72,35 +73,33 @@ std::string Board::has_ended() {
 }
 
 std::string Board::DFSColour(int x, int y, const std::string &colour,
-                             std::set<std::pair<int, int>> &visited) {
-  int size = 11;
-
+                             std::set<std::pair<int, int>> &visited) const {
   std::stack<std::pair<int, int>> stack;
-  stack.push({x, y});
+  stack.emplace(x, y);
   visited.insert({x, y});
 
   while (!stack.empty()) {
-    std::pair<int, int> coordinate = stack.top();
+    constexpr int size = 11;
+    auto [fst, snd] = stack.top();
     stack.pop();
 
     // Win conditions
-    if (colour == "R" && coordinate.first == size - 1) {
+    if (colour == "R" && fst == size - 1) {
       return "R";
     }
-    if (colour == "B" && coordinate.second == size - 1) {
+    if (colour == "B" && snd == size - 1) {
       return "B";
     }
 
     // Visit neighbours
     for (int i = 0; i < Tile::NEIGHBOUR_COUNT; ++i) {
-      int x_n = coordinate.first + Tile::I_DISPLACEMENTS[i];
-      int y_n = coordinate.second + Tile::J_DISPLACEMENTS[i];
+      const int x_n = fst + Tile::I_DISPLACEMENTS[i];
 
-      if (x_n >= 0 && x_n < size && y_n >= 0 && y_n < size) {
+      if (const int y_n = snd + Tile::J_DISPLACEMENTS[i]; x_n >= 0 && x_n < size && y_n >= 0 && y_n < size) {
         if (visited.find({x_n, y_n}) == visited.end() &&
             state[x_n][y_n].getColour() == colour) {
           visited.insert({x_n, y_n});
-          stack.push({x_n, y_n});
+          stack.emplace(x_n, y_n);
         }
       }
     }

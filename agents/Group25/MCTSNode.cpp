@@ -4,24 +4,21 @@
 
 #include "MCTSNode.h"
 #include "Board.h"
-#include "Tile.h"
 #include <algorithm>
 #include <cmath>
-#include <cstdlib>
-#include <ctime>
 #include <random>
-#include <set>
 #include <sstream>
 #include <stack>
 
-#define DECAY_RATE -0.05
+#define DECAY_RATE (-0.05)
 #include <iostream>
+#include <utility>
 
 auto rng = std::default_random_engine{};
 
 inline std::string opp(const std::string &c) { return c == "R" ? "B" : "R"; }
 
-std::vector<std::pair<int, int>> get_valid_moves(const std::string state,
+std::vector<std::pair<int, int>> get_valid_moves(const std::string& state,
                                                  const int boardSize) {
   std::vector<std::string> lines;
   std::stringstream ss(state);
@@ -41,30 +38,30 @@ std::vector<std::pair<int, int>> get_valid_moves(const std::string state,
   return choices;
 }
 
-MCTSNode::MCTSNode(const Board &state, const std::string colour,
+MCTSNode::MCTSNode(const Board &state, std::string  colour,
                    MCTSNode *parent, std::pair<int, int> move)
-    : colour(colour), state(state), parent(parent), visits(0), payoff_sum(0),
-      move(move), valid_moves(state.get_moves()) {}
+    : colour(std::move(colour)), state(state), parent(parent), visits(0), payoff_sum(0),
+      move(std::move(move)), valid_moves(state.get_moves()) {}
 
 void MCTSNode::generate_all_children_nodes() {
   for (std::pair<int, int> move : this->valid_moves) {
     // Make a new board and make the move
     Board brd = state.duplicate();
     brd.make_move(move, colour);
-    MCTSNode *new_node = new MCTSNode(brd, colour, this, move);
+    auto *new_node = new MCTSNode(brd, colour, this, move);
     children.push_back(new_node);
   }
 }
 
 void MCTSNode::delete_children() {
-  for (MCTSNode *child : children) {
+  for (const MCTSNode *child : children) {
     delete child;
   }
   children.clear();
 }
 
-void MCTSNode::backpropagate(double result, int visits) {
-  MCTSNode *node = this;
+void MCTSNode::backpropagate(const double result, const int visits) {
+  auto node = this;
   while (node != nullptr) {
     node->visits += visits;
     node->payoff_sum += result;
@@ -77,7 +74,7 @@ std::pair<int, int> MCTSNode::get_best_move() {
   return best_node->move;
 }
 
-double MCTSNode::simulate_from_node(std::string current_colour) {
+double MCTSNode::simulate_from_node(std::string current_colour) const {
   std::vector<std::pair<int, int>> moves_taken;
 
   // Check if the game has ended at this node if so there is a winning move
@@ -102,8 +99,8 @@ double MCTSNode::simulate_from_node(std::string current_colour) {
 
     local_state.make_move(move, current_colour);
     winner = local_state.has_ended();
-    if (winner != "") {
-      return (std::exp((long double)(DECAY_RATE * moves_taken.size())) *
+    if (!winner.empty()) {
+      return (std::exp((DECAY_RATE * static_cast<double>(moves_taken.size()))) *
               (colour == current_colour ? 1 : -1));
     }
     current_colour = opp(current_colour);
@@ -131,6 +128,6 @@ MCTSNode *MCTSNode::best_child(float c) {
   return best_node;
 }
 
-MCTSNode *MCTSNode::get_child(int index) { return this->children[index]; }
+MCTSNode *MCTSNode::get_child(const int index) const { return this->children[index]; }
 
-int MCTSNode::get_children_size() { return this->children.size(); }
+unsigned long MCTSNode::get_children_size() const { return this->children.size(); }
