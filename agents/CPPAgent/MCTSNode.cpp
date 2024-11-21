@@ -54,10 +54,17 @@ void MCTSNode::generate_all_children_nodes() {
   }
 }
 
-void MCTSNode::backpropagate(double result) {
+void MCTSNode::delete_children() {
+  for (MCTSNode *child : this->children) {
+    delete child;
+  }
+  this->children.clear();
+}
+
+void MCTSNode::backpropagate(double result, int visits) {
   MCTSNode *node = this;
   while (node != nullptr) {
-    node->visits++;
+    node->visits += visits;
     node->payoff_sum += result;
     node = node->parent;
   }
@@ -144,7 +151,7 @@ std::string MCTSNode::DFSColour(int x, int y, const std::string &colour,
   return "";
 }
 
-double MCTSNode::simulate_from_node(std::string &current_colour) {
+double MCTSNode::simulate_from_node(std::string current_colour) {
   std::vector<std::pair<int, int>> moves_taken;
 
   // Check if the game has ended at this node if so there is a winning move
@@ -169,7 +176,7 @@ double MCTSNode::simulate_from_node(std::string &current_colour) {
     this->state.make_move(move, current_colour);
     winner = this->has_ended();
     if (winner != "") {
-      for (std::pair<int, int> move : moves_taken) {
+      for (auto &move : moves_taken) {
         this->state.make_move(move, "0");
       }
       return (std::exp((long double)(DECAY_RATE * moves_taken.size())) *
@@ -197,7 +204,6 @@ MCTSNode *MCTSNode::best_child(float c) {
       best_node = child;
     }
   }
-  std::cerr << "Best score: " << best_score << std::endl;
   return best_node;
 }
 

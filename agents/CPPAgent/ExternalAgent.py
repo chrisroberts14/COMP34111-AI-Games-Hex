@@ -75,5 +75,8 @@ class ExternalAgent(AgentBase):
         response = self.agent_process.stdout.readline().rstrip()
 
         # assuming the response takes the form "x,y" with -1,-1 if the agent wants to make a swap move
-        x, y = response.split(",")
+        try:
+            x, y = response.split(",")
+        except ValueError:
+            raise ValueError(f"Invalid response from agent {response}")
         return Move(int(x), int(y))

@@ -111,8 +111,10 @@ void MCTSAgent::makeMove(const std::string &board) {
     double result = node->simulate_from_node(colour);
     node->backpropagate(result);
   }
+  std::cerr << "Done" << std::endl;
 
   std::pair<int, int> best_move = root.get_best_move();
+  //root.delete_children();
   sendMessage(std::to_string(best_move.first) + "," +
               std::to_string(best_move.second));
 }
