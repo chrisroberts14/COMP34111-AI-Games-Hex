@@ -27,16 +27,17 @@ public:
   MCTSNode(const Board &state, const std::string colour, MCTSNode *parent,
            std::pair<int, int> move);
 
-  void backpropagate(double result);
+  void backpropagate(double result, int visits=1);
   std::string has_ended();
   std::string DFSColour(int i, int j, const std::string &colour,
                         std::set<std::pair<int, int>> &visited);
   MCTSNode *best_child(float c);
-  double simulate_from_node(std::string &current_colour);
+  double simulate_from_node(std::string current_colour);
   void generate_all_children_nodes();
   std::pair<int, int> get_best_move();
   MCTSNode *get_child(int index);
   int get_children_size();
+  void delete_children();
 };
 
 #endif // MCTSNODE_H
