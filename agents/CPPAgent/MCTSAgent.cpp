@@ -11,9 +11,11 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <future>
 
 #define DECAY_RATE -0.05
 #define EXPLORATION_CONSTANT 1.41
+#define THREAD_COUNT 32
 
 std::vector<std::vector<Tile>>
 convert_board_string(const std::string &board_string, const int boardSize) {
@@ -54,9 +56,12 @@ void MCTSAgent::run() {
   while (true) {
     try {
       std::string msg = getMessage();
+      //std::string msg = "CHANGE;0,0;RRRRBBRBRRR,RBRBRBRB000,RBRRR0RBB00,RRR00RB0000,RRBBRBBB000,RRBRB0R0000,0R0RBBBBB0B,BB0R0B000R0,00BRRB0BB00,BBBRBR0B000,0RBBR00B0R0;5;\n";
       if (!interpretMessage(msg)) {
+        std::cerr << "PROBLEM INTERPRETING MESSAGE" << std::endl;
         return;
       }
+      //return;
     } catch (const std::exception &e) {
       return;
     }
@@ -93,7 +98,7 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
 }
 
 void MCTSAgent::makeMove(const std::string &board) {
-  std::cerr << turn << std::endl;
+  int iter = 0;
   if (turn == 2) {
     sendMessage("-1,-1");
     return;
@@ -108,13 +113,33 @@ void MCTSAgent::makeMove(const std::string &board) {
       std::chrono::steady_clock::now() + std::chrono::milliseconds(10000);
   while (std::chrono::steady_clock::now() < end_time) {
     MCTSNode* node = root.best_child(EXPLORATION_CONSTANT);
-    double result = node->simulate_from_node(colour);
-    node->backpropagate(result);
+    // Run this method N times and backpropagate the results
+    std::vector<std::thread> threads;
+    std::vector<std::future<double>> futures;
+    for (int i = 0; i < THREAD_COUNT; i++) {
+      std::promise<double> promise;
+      futures.push_back(promise.get_future());
+      threads.emplace_back([&node, promise = std::move(promise), this]() mutable {
+        double result = node->simulate_from_node(colour);
+        promise.set_value(result);
+      });
+    }
+	// Wait for threads to finish
+    for (std::thread &t : threads) {
+      t.join();
+    }
+    // Get results from the threads and sum them
+    double result = 0;
+    for (auto &future : futures) {
+        result += future.get();
+    }
+    node->backpropagate(result, THREAD_COUNT);
+    iter += THREAD_COUNT;
   }
-  std::cerr << "Done" << std::endl;
+  std::cerr << "Multi-threaded iterations: " << iter << std::endl;
 
   std::pair<int, int> best_move = root.get_best_move();
-  //root.delete_children();
+  root.delete_children();
   sendMessage(std::to_string(best_move.first) + "," +
               std::to_string(best_move.second));
 }

@@ -8,6 +8,7 @@
 #include "Tile.h"
 #include <string>
 #include <vector>
+#include <set>
 
 class Board {
 private:
@@ -18,10 +19,12 @@ private:
 public:
   Board(std::vector<std::vector<Tile>> state_vec, const int &size = 11,
         std::string winner = "");
-  Board(const Board &board, const int &size = 11, std::string winner = "");
   void make_move(std::pair<int, int> &move, std::string colour);
   std::vector<std::pair<int, int>> get_moves() const;
   std::vector<std::vector<Tile>> &get_state();
+  Board duplicate();
+  std::string has_ended();
+  std::string DFSColour(int x, int y, const std::string &colour, std::set<std::pair<int, int>> &visited);
 };
 
 #endif // BOARD_H
