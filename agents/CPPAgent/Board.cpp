@@ -4,8 +4,8 @@
 
 #include "Board.h"
 #include "Tile.h"
-#include <sstream>
 #include <set>
+#include <sstream>
 #include <stack>
 
 Board::Board(std::vector<std::vector<Tile>> state_vec, const int &size,
@@ -30,7 +30,9 @@ std::vector<std::pair<int, int>> Board::get_moves() const {
   return choices;
 }
 
-Board Board::duplicate() { return Board(this->state, this->size, this->winner); }
+Board Board::duplicate() {
+  return Board(this->state, this->size, this->winner);
+}
 
 std::string Board::has_ended() {
   int size = 11;
@@ -69,7 +71,8 @@ std::string Board::has_ended() {
   return "";
 }
 
-std::string Board::DFSColour(int x, int y, const std::string &colour, std::set<std::pair<int, int>> &visited) {
+std::string Board::DFSColour(int x, int y, const std::string &colour,
+                             std::set<std::pair<int, int>> &visited) {
   int size = 11;
 
   std::stack<std::pair<int, int>> stack;

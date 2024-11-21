@@ -6,9 +6,9 @@
 #define BOARD_H
 
 #include "Tile.h"
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
 
 class Board {
 private:
@@ -24,7 +24,8 @@ public:
   std::vector<std::vector<Tile>> &get_state();
   Board duplicate();
   std::string has_ended();
-  std::string DFSColour(int x, int y, const std::string &colour, std::set<std::pair<int, int>> &visited);
+  std::string DFSColour(int x, int y, const std::string &colour,
+                        std::set<std::pair<int, int>> &visited);
 };
 
 #endif // BOARD_H
