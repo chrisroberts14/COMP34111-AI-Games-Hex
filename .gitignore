@@ -162,6 +162,8 @@ cython_debug/
 #.idea/
 
 *.o
+/agents/CPPAgent2/
+
 agents/CPPAgent2/*
 
 .vscode
