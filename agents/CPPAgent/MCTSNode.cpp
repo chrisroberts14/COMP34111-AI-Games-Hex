@@ -15,6 +15,7 @@
 #include <stack>
 
 #define DECAY_RATE -0.05
+#include <iostream>
 
 inline std::string opp(const std::string &c) { return c == "R" ? "B" : "R"; }
 
@@ -196,6 +197,7 @@ MCTSNode *MCTSNode::best_child(float c) {
       best_node = child;
     }
   }
+  std::cerr << "Best score: " << best_score << std::endl;
   return best_node;
 }
 
