@@ -162,6 +162,8 @@ cython_debug/
 #.idea/
 
 *.o
+/agents/Group25/cmake-build-debug/
+/agents/Group25/cmake-build-release/
 /agents/CPPAgent2/
 
 agents/CPPAgent2/*
