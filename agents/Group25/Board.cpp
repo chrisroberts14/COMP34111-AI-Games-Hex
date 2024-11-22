@@ -3,7 +3,11 @@
 //
 
 #include "Board.h"
+
+#include <iostream>
+
 #include "Tile.h"
+#include "Opening.h"
 #include <set>
 #include <sstream>
 #include <stack>
@@ -105,4 +109,34 @@ std::string Board::DFSColour(int x, int y, const std::string &colour,
     }
   }
   return "";
+}
+
+bool Board::should_swap() const {
+  // Should only be called if the player is on turn two
+  std::pair<int, int> red_move_coords;
+  for (int i = 0; i < size; ++i) {
+    for (int j = 0; j < size; ++j) {
+      if (state[i][j].getColour() == "R") {
+        red_move_coords = {i, j};
+        break;
+      }
+    }
+  }
+
+  // Don't swap these coordinates
+  // Refer to: https://www.hexwiki.net/index.php/Swap_rule#Size_11
+  if ((red_move_coords.second == 0 && red_move_coords.first < 10) ||
+    (red_move_coords.second == 1 && red_move_coords.first < 9) ||
+    (red_move_coords.second == 2 && (red_move_coords.first == 0 || red_move_coords.first == 10)) ||
+    (red_move_coords.second == 8 && (red_move_coords.first == 0 || red_move_coords.first == 10)) ||
+    (red_move_coords.second == 9 && red_move_coords.first < 2) ||
+    (red_move_coords.second == 10 && red_move_coords.first < 1)) {
+    return false;
+    }
+  return true;
+}
+
+std::pair<int, int> Board::opening_move() {
+  // This is a strong move that is played first
+  return {1, 2};
 }

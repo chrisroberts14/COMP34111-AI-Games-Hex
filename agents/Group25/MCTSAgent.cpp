@@ -16,7 +16,7 @@
 #define DECAY_RATE (-0.05)
 #define EXPLORATION_CONSTANT 1.41
 #define THREAD_COUNT 32
-#define TIME_LIMIT 290
+#define TIME_LIMIT 295
 
 double time_left_ms = TIME_LIMIT * 1000;
 
@@ -79,6 +79,20 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
     msg.push_back(item);
   }
 
+  /*
+   *Dead code for getting the previous move leaving here incase it is useful later
+  // msg[1] is the previous move in the form "x,y"
+  // Convert this to a pair
+  std::pair prev_move = {-2, -2};
+  if (!msg[1].empty()) {
+    std::stringstream ss2(msg[1]);
+    std::string item2;
+    std::getline(ss2, item2, ',');
+    prev_move.first = std::stoi(item2);
+    std::getline(ss2, item2, ',');
+    prev_move.second = std::stoi(item2);
+  }
+  */
   const std::string board = msg[2];
   turn = std::stoi(msg[3]);
   if (msg[0] == "START") {
@@ -97,32 +111,8 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
   return true;
 }
 
-void MCTSAgent::makeMove(const std::string &board) const {
-  const long move_start_time_ms =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::steady_clock::now().time_since_epoch())
-          .count();
-
-  if (turn == 2) {
-    sendMessage("-1,-1");
-    return;
-  }
-
-  double turn_time;
-  // Calculate time to run MCTS
-  // Give 5 seconds of buffer time so total time is 290 seconds
-  if (turn < 20) {
-    // Use exponential decay to calculate time
-    turn_time = time_left_ms * 0.15;
-  } else {
-    turn_time = time_left_ms / (turn - 15);
-  }
-  std::vector<std::vector<Tile>> boardState =
-      convert_board_string(board, boardSize);
-
-  const Board brd(boardState, boardSize, "");
-  MCTSNode root(brd, colour, nullptr, {-1, -1});
-  root.generate_all_children_nodes();
+void MCTSAgent::multi_thread_move(MCTSNode &root) const {
+  constexpr double turn_time = 10000;
   const long loop_start_time =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::steady_clock::now().time_since_epoch())
@@ -155,12 +145,64 @@ void MCTSAgent::makeMove(const std::string &board) const {
       result += future.get();
     }
     node->backpropagate(result, THREAD_COUNT);
+         }
+}
+
+void MCTSAgent::single_thread_move(MCTSNode &root) const {
+  constexpr double turn_time = 10000;
+  const long loop_start_time =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::steady_clock::now().time_since_epoch())
+          .count();
+  while (std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::steady_clock::now().time_since_epoch())
+                 .count() -
+             loop_start_time <
+         static_cast<long>(turn_time)) {
+    MCTSNode *node = root.best_child(EXPLORATION_CONSTANT);
+    const double result = node->simulate_from_node(colour);
+    node->backpropagate(result);
+  }
+}
+
+
+void MCTSAgent::makeMove(const std::string &board) const {
+  const long move_start_time_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::steady_clock::now().time_since_epoch())
+          .count();
+
+  const std::vector<std::vector<Tile>> boardState =
+      convert_board_string(board, boardSize);
+
+  const Board brd(boardState, boardSize, "");
+  if (turn == 1) {
+    auto [fst_open, snd_open] = Board::opening_move();
+    sendMessage(std::to_string(fst_open) + "," +
+                std::to_string(snd_open));
+    return;
   }
 
-  std::pair<int, int> best_move = root.get_best_move();
+  if (turn == 2) {
+    if (brd.should_swap()) {
+      sendMessage("-1,-1");
+      return;
+    }
+  }
+
+  MCTSNode root(brd, colour, nullptr, {-1, -1});
+  root.generate_all_children_nodes();
+
+  if (turn < 20) {
+    multi_thread_move(root);
+  } else {
+    single_thread_move(root);
+  }
+
+  auto [fst, snd] = root.get_best_move();
   root.delete_children();
-  sendMessage(std::to_string(best_move.first) + "," +
-              std::to_string(best_move.second));
+  sendMessage(std::to_string(fst) + "," +
+              std::to_string(snd));
 
   const long move_end_time_ms =
       std::chrono::duration_cast<std::chrono::milliseconds>(
