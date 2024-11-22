@@ -26,6 +26,9 @@ public:
   [[nodiscard]] std::string has_ended() const;
   std::string DFSColour(int x, int y, const std::string &colour,
                         std::set<std::pair<int, int>> &visited) const;
+    [[nodiscard]] bool should_swap() const;
+    [[nodiscard]] static std::pair<int, int> opening_move();
+    [[nodiscard]] std::pair<int, int> pre_checks(const std::pair<int, int> &prev_move) const;
 };
 
 #endif // BOARD_H
