@@ -25,13 +25,13 @@ public:
 
   void backpropagate(double result, int visits = 1);
   MCTSNode *best_child(float c);
-  [[nodiscard]] double simulate_from_node(std::string current_colour) const;
+  [[nodiscard]] double simulate_from_node(std::string current_colour, int turn_number) const;
   void generate_all_children_nodes();
   std::pair<int, int> get_best_move();
   [[nodiscard]] MCTSNode *get_child(int index) const;
   [[nodiscard]] unsigned long get_children_size() const;
   void delete_children();
-    std::pair<int, int> best_move(Board& local_state) const;
+    [[nodiscard]] int get_turn_number() const;
 };
 
 #endif // MCTSNODE_H

@@ -11,6 +11,7 @@
 #include <utility>
 #include <random>
 #include <cmath>
+#include <iostream>
 
 Board::Board(std::vector<std::vector<Tile> > state_vec, const int &size,
              std::string winner)
