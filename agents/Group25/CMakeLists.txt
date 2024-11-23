@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.29.6)
 project(CPPAgent)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY Group25)
 
@@ -15,7 +15,9 @@ add_executable(CPPAgent
         MCTSNode.cpp
         MCTSNode.h
         Tile.cpp
-        Tile.h)
+        Tile.h
+        BestMove.cpp
+        BestMove.h)
 
 # Copy over all files in agents/CPP to the build directory as we submit the whole thing
 file(COPY Board.cpp DESTINATION Group25)

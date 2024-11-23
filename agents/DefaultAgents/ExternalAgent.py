@@ -21,8 +21,8 @@ class ExternalAgent(AgentBase):
         # spawn a process that calls a compiled java NaiveAgent.class file and passes two arguments:
         # - "R" or "B" to tell the agent which colour it is
         # - 11, which is the size of the board
-        self.agent_process = Popen(
-            ["java", "-cp", "agents/DefaultAgents", "NaiveAgent", colour.get_char(), "11"],
+        self.agent_process = Popen(["java", "-cp", "agents/DefaultAgents", "NaiveAgent",
+                                    colour.get_char(), "11"],
             stdout=PIPE,
             stdin=PIPE,
             text=True,
