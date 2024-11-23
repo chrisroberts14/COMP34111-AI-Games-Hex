@@ -15,7 +15,7 @@
 
 #define DECAY_RATE (-0.05)
 #define EXPLORATION_CONSTANT 1.41
-#define THREAD_COUNT 32
+#define THREAD_COUNT 4
 #define TIME_LIMIT 295
 
 double time_left_ms = TIME_LIMIT * 1000;

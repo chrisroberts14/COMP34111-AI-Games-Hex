@@ -74,6 +74,57 @@ std::pair<int, int> MCTSNode::get_best_move() {
   return best_node->move;
 }
 
+double distanceFromCenter(const int x, const int y) {
+  constexpr double center = 5.5;
+  return std::sqrt(std::pow(x - center, 2) + std::pow(y - center, 2));
+}
+
+int connectivity(Board& local_state, const int x, const int y, const std::string& colour) {
+  // Example: Count adjacent cells owned by the same player
+  int dirs[6][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, 1}, {1, -1}};
+  int count = 0;
+  for (const auto& dir : dirs) {
+    const int nx = x + dir[0];
+    if (const int ny = y + dir[1]; nx >= 0 && nx < 11 && ny >= 0 && ny < 11 && local_state.get_state().at(nx).at(ny).getColour() == colour) {
+      count++;
+    }
+  }
+  return count;
+}
+
+double potential(Board& local_state, const int x, const int y, const std::string& colour) {
+  // Potential is estimated by unoccupied neighbors and their connectivity to the player's path
+  int dirs[6][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, 1}, {1, -1}};
+  double score = 0;
+  for (const auto& dir : dirs) {
+    const int nx = x + dir[0];
+    if (int ny = y + dir[1]; nx >= 0 && nx < 11 && ny >= 0 && ny < 11 && local_state.get_state().at(nx).at(ny).getColour() == "0") {
+      score += 1.0 + connectivity(local_state, nx, ny, colour) * 0.5;
+    }
+  }
+  return score;
+}
+
+std::pair<int, int> MCTSNode::best_move(Board& local_state) const {
+  double score = 0;
+  std::pair<int, int> best_move = std::make_pair(0, 0);
+  double best_score = -std::numeric_limits<double>::infinity();
+  for (int x = 0; x < 11; x++) {
+    for (int y = 0; y < 11; y++) {
+      if (local_state.get_state()[x][y].getColour() == "0") {
+        score -= distanceFromCenter(x, y);
+        score += connectivity(local_state, x, y, colour) * 2;
+        score += potential(local_state, x, y, colour);
+        if (score > best_score) {
+          best_score = score;
+          best_move = std::make_pair(x, y);
+        }
+      }
+    }
+  }
+  return best_move;
+}
+
 double MCTSNode::simulate_from_node(std::string current_colour) const {
   std::vector<std::pair<int, int>> moves_taken;
 
@@ -94,7 +145,9 @@ double MCTSNode::simulate_from_node(std::string current_colour) const {
   int i = 0;
   while (true) {
     std::pair<int, int> move = local_moves[i];
+    // std::pair<int, int> move = best_move(local_state);
     i++;
+    std::cerr << "Move: " << move.first << ", " << move.second << std::endl;
     moves_taken.push_back(move);
 
     local_state.make_move(move, current_colour);
@@ -107,10 +160,10 @@ double MCTSNode::simulate_from_node(std::string current_colour) const {
   }
 }
 
-MCTSNode *MCTSNode::best_child(float c) {
+MCTSNode *MCTSNode::best_child(const float c) {
   MCTSNode *best_node = nullptr;
   double best_score = -std::numeric_limits<double>::infinity();
-  double log_parent_visits = std::log(visits);
+  const double log_parent_visits = std::log(visits);
 
   for (MCTSNode *child : children) {
     // If the child has not been visited, return it immediately
@@ -118,8 +171,8 @@ MCTSNode *MCTSNode::best_child(float c) {
       return child;
     }
 
-    double score = child->payoff_sum / child->visits +
-                   c * std::sqrt(2 * log_parent_visits / child->visits);
+    const double score = child->payoff_sum / child->visits +
+                         c * std::sqrt(2 * log_parent_visits / child->visits);
     if (score > best_score) {
       best_score = score;
       best_node = child;

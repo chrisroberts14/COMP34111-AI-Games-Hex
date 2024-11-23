@@ -31,6 +31,7 @@ public:
   [[nodiscard]] MCTSNode *get_child(int index) const;
   [[nodiscard]] unsigned long get_children_size() const;
   void delete_children();
+    std::pair<int, int> best_move(Board& local_state) const;
 };
 
 #endif // MCTSNODE_H
