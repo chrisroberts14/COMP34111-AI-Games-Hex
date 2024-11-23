@@ -13,6 +13,8 @@
 #include <utility>
 #include <vector>
 
+#include "BestMove.h"
+
 #define DECAY_RATE (-0.05)
 #define EXPLORATION_CONSTANT 1.41
 #define THREAD_COUNT 4
@@ -131,7 +133,7 @@ void MCTSAgent::multi_thread_move(MCTSNode &root) const {
       futures.push_back(promise.get_future());
       threads.emplace_back(
           [&node, promise = std::move(promise), this]() mutable {
-            const double result = node->simulate_from_node(colour);
+            const double result = node->simulate_from_node(colour, turn);
             promise.set_value(result);
           });
     }
@@ -160,7 +162,7 @@ void MCTSAgent::single_thread_move(MCTSNode &root) const {
              loop_start_time <
          static_cast<long>(turn_time)) {
     MCTSNode *node = root.best_child(EXPLORATION_CONSTANT);
-    const double result = node->simulate_from_node(colour);
+    const double result = node->simulate_from_node(colour, turn);
     node->backpropagate(result);
   }
 }
@@ -193,13 +195,16 @@ void MCTSAgent::makeMove(const std::string &board) const {
   MCTSNode root(brd, colour, nullptr, {-1, -1});
   root.generate_all_children_nodes();
 
-  if (turn < 20) {
-    multi_thread_move(root);
-  } else {
-    single_thread_move(root);
-  }
+  //if (turn < 20) {
+  //  multi_thread_move(root);
+  //} else {
+    //single_thread_move(root);
+  //}
 
-  auto [fst, snd] = root.get_best_move();
+  BestMove move(boardState, colour == "R" ? "B" : "R", turn);
+  auto [fst, snd] = move.get_best_move();
+
+  // auto [fst, snd] = root.get_best_move();
   root.delete_children();
   sendMessage(std::to_string(fst) + "," +
               std::to_string(snd));
