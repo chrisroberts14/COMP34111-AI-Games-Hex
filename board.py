@@ -125,6 +125,9 @@ def look_for_guaranteed_edge_templates(played_tile):
     if (abs(played_tile.row) == 2):
         if (template_exists_on_board(template.row2Template.tile_of_origin, played_tile)):
             abandon_tiles_that_are_empty_in_the_template(played_tile, template.row2Template.tile_of_origin)
+    elif (abs(played_tile.row) == 3):
+        if (template_exists_on_board(template.row3Template.tile_of_origin, played_tile)):
+            abandon_tiles_that_are_empty_in_the_template(played_tile, template.row3Template.tile_of_origin)
     
 
 def template_exists_on_board(template_tile, board_tile):
@@ -158,5 +161,10 @@ print(board.display_row_numbers())
 board.opponent_makes_move(9,6)
 board.opponent_makes_move(9,4)
 board.opponent_makes_move(1,4)
+
+board = Board(player_colour=Colour.BLUE)
+print(board.display_row_numbers())
+board.opponent_makes_move(6,8)
+board.display_abandoned_tiles()
 
 board.display_abandoned_tiles()

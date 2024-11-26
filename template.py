@@ -26,4 +26,10 @@ class Template:
 
 row2Template = Template(2, OpponentTile(south_west_neighbour=EmptyTile(), south_east_neighbour=EmptyTile()))
 
+row3Template = Template(3, OpponentTile(south_west_neighbour=EmptyTile(south_west_neighbour=EmptyTile(), south_east_neighbour=EmptyTile()), 
+                                        south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()),
+                                        east_neighbour=EmptyTile(south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()))
+                                        )
+                        )
+
 
