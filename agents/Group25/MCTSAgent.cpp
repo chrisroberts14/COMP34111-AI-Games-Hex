@@ -113,65 +113,6 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
   return true;
 }
 
-void MCTSAgent::multi_thread_move(MCTSNode &root) const {
-  constexpr double turn_time = 10000;
-  const long loop_start_time =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::steady_clock::now().time_since_epoch())
-          .count();
-  while (std::chrono::duration_cast<std::chrono::milliseconds>(
-             std::chrono::steady_clock::now().time_since_epoch())
-                 .count() -
-             loop_start_time <
-         static_cast<long>(turn_time)) {
-    MCTSNode *node = root.best_child(EXPLORATION_CONSTANT);
-    // Run this method N times and backpropagate the results
-    std::vector<std::thread> threads;
-    std::vector<std::future<double>> futures;
-    for (int i = 0; i < THREAD_COUNT; i++) {
-      std::promise<double> promise;
-      futures.push_back(promise.get_future());
-      threads.emplace_back(
-          [&node, promise = std::move(promise), this]() mutable {
-            double result = node->simulate_from_node();
-            promise.set_value(result);
-          });
-    }
-    // Wait for threads to finish
-    for (std::thread &t : threads) {
-      t.join();
-    }
-    // Get results from the threads and sum them
-    double result = 0;
-    for (auto &future : futures) {
-      result += future.get();
-    }
-    node->backpropagate(result, THREAD_COUNT);
-         }
-}
-
-void MCTSAgent::single_thread_move(MCTSNode &root) const {
-  int count = 0;
-  constexpr double turn_time = 10000;
-  const long loop_start_time =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::steady_clock::now().time_since_epoch())
-          .count();
-  while (std::chrono::duration_cast<std::chrono::milliseconds>(
-             std::chrono::steady_clock::now().time_since_epoch())
-                 .count() -
-             loop_start_time <
-         static_cast<long>(turn_time)) {
-    count++;
-    MCTSNode *node = root.best_child(EXPLORATION_CONSTANT);
-    double result = node->simulate_from_node();
-    if (result > 1) {
-      std::cerr << result << std::endl;
-    }
-    node->backpropagate(result, 1);
-  }
-  std::cerr << "iteration count: " << count << std::endl;
-}
 
 void MCTSAgent::makeMove(const std::string &board) const {
   const long move_start_time_ms =
@@ -196,11 +137,29 @@ void MCTSAgent::makeMove(const std::string &board) const {
   MCTSNode root(red_moves, blue_moves, open_moves, colour, nullptr, {-1, -1});
   root.generate_all_children_nodes();
 
-  single_thread_move(root);
-  // multi_thread_move(root);
+  int count = 0;
+  constexpr double turn_time = 10000;
+  const long loop_start_time =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::steady_clock::now().time_since_epoch())
+          .count();
+  while (std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::steady_clock::now().time_since_epoch())
+                 .count() -
+             loop_start_time <
+         static_cast<long>(turn_time)) {
+    count++;
+    MCTSNode *node = root.best_child(EXPLORATION_CONSTANT);
+    double result = node->simulate_from_node();
+    if (result > 1) {
+      std::cerr << result << std::endl;
+    }
+    node->backpropagate(result, 1);
+         }
+  std::cerr << "iteration count: " << count << std::endl;
 
   auto [fst, snd] = root.get_best_move();
-  //root.delete_children();
+  root.delete_children();
   sendMessage(std::to_string(fst) + "," +
               std::to_string(snd));
 

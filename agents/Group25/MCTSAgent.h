@@ -22,8 +22,6 @@ public:
   void run();
   bool interpretMessage(const std::string &s);
   void makeMove(const std::string &board) const;
-  void multi_thread_move(MCTSNode &root) const;
-  void single_thread_move(MCTSNode &root) const;
 };
 
 #endif // MCTSAGENT_H
