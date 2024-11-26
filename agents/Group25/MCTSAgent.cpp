@@ -3,7 +3,6 @@
 //
 
 #include "MCTSAgent.h"
-#include "Board.h"
 #include "MCTSNode.h"
 #include <future>
 #include <iostream>
@@ -12,19 +11,16 @@
 #include <thread>
 #include <utility>
 #include <vector>
-
-#include "BestMove.h"
+#include <set>
 
 #define DECAY_RATE (-0.05)
 #define EXPLORATION_CONSTANT 1.41
-#define THREAD_COUNT 4
+#define THREAD_COUNT 32
 #define TIME_LIMIT 295
 
 double time_left_ms = TIME_LIMIT * 1000;
 
-std::vector<std::vector<Tile>>
-convert_board_string(const std::string &board_string, const int boardSize) {
-  std::vector<std::vector<Tile>> board;
+std::tuple<std::set<std::pair<int, int>>, std::set<std::pair<int, int>>, std::set<std::pair<int, int>>> convert_board_string(const std::string &board_string, const int boardSize) {
   std::vector<std::string> lines;
   std::stringstream ss(board_string);
   std::string line;
@@ -32,19 +28,26 @@ convert_board_string(const std::string &board_string, const int boardSize) {
     lines.push_back(line);
   }
 
+  std::set<std::pair<int, int>> red_moves;
+  std::set<std::pair<int, int>> blue_moves;
+  std::set<std::pair<int, int>> open_moves;
+
   for (int i = 0; i < boardSize; ++i) {
-    std::vector<Tile> row;
     for (int j = 0; j < boardSize; ++j) {
-      Tile tile(i, j, std::string(1, lines[i][j]));
-      row.push_back(tile);
+      if (std::string(1, lines[i][j]) == "R") {
+        red_moves.insert({i, j});
+      } else if (std::string(1, lines[i][j]) == "B") {
+        blue_moves.insert({i, j});
+      } else {
+        open_moves.insert({i, j});
+      }
     }
-    board.push_back(row);
   }
-  return board;
+  return {red_moves, blue_moves, open_moves};
 }
 
 MCTSAgent::MCTSAgent(std::string agentColour, int gameBoardSize)
-    : colour(std::move(agentColour)), turn(0), boardSize(gameBoardSize) {}
+  : colour(std::move(agentColour)), turn(0), boardSize(gameBoardSize) {}
 
 inline std::string MCTSAgent::getMessage() {
   std::string message;
@@ -81,11 +84,9 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
     msg.push_back(item);
   }
 
-  /*
-   *Dead code for getting the previous move leaving here incase it is useful later
   // msg[1] is the previous move in the form "x,y"
   // Convert this to a pair
-  std::pair prev_move = {-2, -2};
+  /*std::pair prev_move = {-2, -2};
   if (!msg[1].empty()) {
     std::stringstream ss2(msg[1]);
     std::string item2;
@@ -93,8 +94,7 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
     prev_move.first = std::stoi(item2);
     std::getline(ss2, item2, ',');
     prev_move.second = std::stoi(item2);
-  }
-  */
+  }*/
   const std::string board = msg[2];
   turn = std::stoi(msg[3]);
   if (msg[0] == "START") {
@@ -133,7 +133,7 @@ void MCTSAgent::multi_thread_move(MCTSNode &root) const {
       futures.push_back(promise.get_future());
       threads.emplace_back(
           [&node, promise = std::move(promise), this]() mutable {
-            const double result = node->simulate_from_node(colour, turn);
+            double result = node->simulate_from_node();
             promise.set_value(result);
           });
     }
@@ -151,6 +151,7 @@ void MCTSAgent::multi_thread_move(MCTSNode &root) const {
 }
 
 void MCTSAgent::single_thread_move(MCTSNode &root) const {
+  int count = 0;
   constexpr double turn_time = 10000;
   const long loop_start_time =
       std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -161,12 +162,16 @@ void MCTSAgent::single_thread_move(MCTSNode &root) const {
                  .count() -
              loop_start_time <
          static_cast<long>(turn_time)) {
+    count++;
     MCTSNode *node = root.best_child(EXPLORATION_CONSTANT);
-    const double result = node->simulate_from_node(colour, turn);
-    node->backpropagate(result);
+    double result = node->simulate_from_node();
+    if (result > 1) {
+      std::cerr << result << std::endl;
+    }
+    node->backpropagate(result, 1);
   }
+  std::cerr << "iteration count: " << count << std::endl;
 }
-
 
 void MCTSAgent::makeMove(const std::string &board) const {
   const long move_start_time_ms =
@@ -174,38 +179,28 @@ void MCTSAgent::makeMove(const std::string &board) const {
           std::chrono::steady_clock::now().time_since_epoch())
           .count();
 
-  const std::vector<std::vector<Tile>> boardState =
-      convert_board_string(board, boardSize);
+  auto [red_moves, blue_moves, open_moves] = convert_board_string(board, boardSize);
 
-  const Board brd(boardState, boardSize, "");
   if (turn == 1) {
-    auto [fst_open, snd_open] = Board::opening_move();
-    sendMessage(std::to_string(fst_open) + "," +
-                std::to_string(snd_open));
+    // Make a random move
+    sendMessage(std::to_string(1) + "," +
+                std::to_string(2));
     return;
   }
 
   if (turn == 2) {
-    if (brd.should_swap()) {
       sendMessage("-1,-1");
       return;
-    }
   }
 
-  MCTSNode root(brd, colour, nullptr, {-1, -1});
+  MCTSNode root(red_moves, blue_moves, open_moves, colour, nullptr, {-1, -1});
   root.generate_all_children_nodes();
 
-  //if (turn < 20) {
-  //  multi_thread_move(root);
-  //} else {
-    //single_thread_move(root);
-  //}
+  single_thread_move(root);
+  // multi_thread_move(root);
 
-  BestMove move(boardState, colour == "R" ? "B" : "R", turn);
-  auto [fst, snd] = move.get_best_move();
-
-  // auto [fst, snd] = root.get_best_move();
-  root.delete_children();
+  auto [fst, snd] = root.get_best_move();
+  //root.delete_children();
   sendMessage(std::to_string(fst) + "," +
               std::to_string(snd));
 

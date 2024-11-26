@@ -1,4 +1,4 @@
-from subprocess import PIPE, Popen
+from subprocess import PIPE, Popen, DEVNULL
 
 from src.AgentBase import AgentBase
 from src.Board import Board

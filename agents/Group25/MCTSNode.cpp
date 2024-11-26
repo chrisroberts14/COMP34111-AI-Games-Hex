@@ -3,54 +3,41 @@
 //
 
 #include "MCTSNode.h"
-#include "Board.h"
+#include "HexUnionFind.h"
 #include <algorithm>
 #include <cmath>
 #include <random>
 #include <sstream>
-#include <stack>
 
 #define DECAY_RATE (-0.05)
 #include <iostream>
 #include <utility>
+#include <stack>
 
-#include "BestMove.h"
-
-auto rng = std::default_random_engine{};
+std::default_random_engine rng(time(nullptr));
 
 inline std::string opp(const std::string &c) { return c == "R" ? "B" : "R"; }
 
-std::vector<std::pair<int, int>> get_valid_moves(const std::string& state,
-                                                 const int boardSize) {
-  std::vector<std::string> lines;
-  std::stringstream ss(state);
-  std::string line;
-  while (std::getline(ss, line, ',')) {
-    lines.push_back(line);
-  }
-
-  std::vector<std::pair<int, int>> choices;
-  for (int i = 0; i < boardSize; ++i) {
-    for (int j = 0; j < boardSize; ++j) {
-      if (lines[i][j] == '0') {
-        choices.emplace_back(i, j);
-      }
-    }
-  }
-  return choices;
-}
-
-MCTSNode::MCTSNode(const Board &state, std::string  colour,
+MCTSNode::MCTSNode(std::set<std::pair<int, int>> red_moves, std::set<std::pair<int, int>> blue_moves, std::set<std::pair<int, int>> open_moves, std::string  colour,
                    MCTSNode *parent, std::pair<int, int> move)
-    : colour(std::move(colour)), state(state), parent(parent), visits(0), payoff_sum(0),
-      move(std::move(move)), valid_moves(state.get_moves()) {}
+    : colour(std::move(colour)), parent(parent), visits(0), payoff_sum(0),
+      move(std::move(move)), blue_moves(std::move(blue_moves)), red_moves(std::move(red_moves)), open_moves(std::move(open_moves)) {}
 
 void MCTSNode::generate_all_children_nodes() {
-  for (std::pair<int, int> move : this->valid_moves) {
-    // Make a new board and make the move
-    Board brd = state.duplicate();
-    brd.make_move(move, colour);
-    auto *new_node = new MCTSNode(brd, colour, this, move);
+  for (const std::pair<int, int> &move : open_moves) {
+    std::set<std::pair<int, int>> new_open_moves = open_moves;
+    new_open_moves.erase(move);
+
+    std::set<std::pair<int, int>> new_red_moves = red_moves;
+    std::set<std::pair<int, int>> new_blue_moves = blue_moves;
+
+    if (colour == "R") {
+      new_red_moves.insert(move);
+    } else if (colour == "B") {
+      new_blue_moves.insert(move);
+    }
+
+    auto *new_node = new MCTSNode(new_red_moves, new_blue_moves, new_open_moves, opp(colour), this, move);
     children.push_back(new_node);
   }
 }
@@ -73,43 +60,55 @@ void MCTSNode::backpropagate(const double result, const int visits) {
 
 std::pair<int, int> MCTSNode::get_best_move() {
   MCTSNode *best_node = best_child(0.0);
+  std::cerr << "Best node visits: " << best_node->visits << std::endl;
+  std::cerr << "Best node payoff sum: " << best_node->payoff_sum << std::endl;
   return best_node->move;
 }
 
-double MCTSNode::simulate_from_node(std::string current_colour, const int turn_number) const {
-  std::vector<std::pair<int, int>> moves_taken;
-
-  // Check if the game has ended at this node if so there is a winning move
-  // The reward here is higher than is possible for other moves which guarantees
-  // that the winning move is chosen
-  Board local_state = state.duplicate();
-  std::vector<std::pair<int, int>> local_moves = local_state.get_moves();
-
-  std::string winner = local_state.has_ended();
-  if (winner == colour) {
-    return 2;
+void output_board(const std::set<std::pair<int, int>> &red_moves, const std::set<std::pair<int, int>> &blue_moves) {
+  std::vector<std::vector<std::string>> board(11, std::vector<std::string>(11, "."));
+  for (const auto &[fst, snd] : red_moves) {
+    board[fst][snd] = "R";
   }
+  for (const auto &[fst, snd] : blue_moves) {
+    board[fst][snd] = "B";
+  }
+  for (int i = 0; i < 11; ++i) {
+    for (int j = 0; j < 11; ++j) {
+      std::cerr << board[i][j];
+    }
+    std::cerr << std::endl;
+  }
+}
 
-  // Shuffle the vector
-  // Faster than picking a random element from the vector every iteration
-  std::shuffle(local_moves.begin(), local_moves.end(), rng);
-  int i = 0;
-  while (true) {
-    // std::pair<int, int> move = local_moves[i];
-    BestMove bestMove(local_state.get_state(), current_colour, turn_number + i);
-    auto move = bestMove.get_best_move();
-    // std::pair<int, int> move = best_move(local_state);
-    i++;
-    moves_taken.push_back(move);
-
-    local_state.make_move(move, current_colour);
-    winner = local_state.has_ended();
-    if (!winner.empty()) {
-      return (std::exp((DECAY_RATE * static_cast<double>(moves_taken.size()))) *
-              (colour == current_colour ? 1 : -1));
+double MCTSNode::simulate_from_node() {
+  std::string current_colour = colour;
+  // Get all possible moves
+  // Shuffle them
+  // Split into blue and red moves
+  HexUnionFind playout(11, red_moves, blue_moves);
+  // Add all current moves
+  for (const auto &[fst, snd] : blue_moves) {
+    if (playout.add_move(fst, snd, "B") && current_colour == "B") {
+      return 1;
+    }
+  }
+  for (const auto &[fst, snd] : red_moves) {
+    if (playout.add_move(fst, snd, "R") && current_colour == "R") {
+      return 1;
+    };
+  }
+  double move_count = 0;
+  std::vector open_moves_vec(open_moves.begin(), open_moves.end());
+  std::shuffle(open_moves_vec.begin(), open_moves_vec.end(), rng);
+  for (const auto &[fst, snd] : open_moves_vec) {
+    move_count++;
+    if (playout.add_move(fst, snd, current_colour)) {
+      return std::exp(-0.05 * move_count) * (colour == current_colour ? -1 : 1);
     }
     current_colour = opp(current_colour);
   }
+  return 0;
 }
 
 MCTSNode *MCTSNode::best_child(const float c) {

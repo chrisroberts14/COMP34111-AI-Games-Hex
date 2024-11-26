@@ -21,7 +21,11 @@ Board::Board(std::vector<std::vector<Tile> > state_vec, const int &size,
 std::vector<std::vector<Tile> > &Board::get_state() { return this->state; }
 
 void Board::make_move(const std::pair<int, int> &move, const std::string &colour) {
+    std::cerr << move.first << ", " << move.second << std::endl;
+    std::cerr << colour << std::endl;
+    std::cerr << state.at(move.first).at(move.second).getColour() << std::endl;
     this->state.at(move.first).at(move.second).setColour(colour);
+    std::cerr << "PASSED" << std::endl;
 }
 
 std::vector<std::pair<int, int> > Board::get_moves() const {
