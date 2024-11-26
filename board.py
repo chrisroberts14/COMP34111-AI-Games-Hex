@@ -9,23 +9,14 @@ class Board:
         self.opponentColour = opponentColour
 
         # Declare 2D array of nodes
-        for x in range(11):
+        for row in range(11):
             self.row = []
-            for y in range(11):
-                self.row.append(Tile(x, y))
+            for column in range(11):
+                self.row.append(Tile(x=column, y=row))
             self.array.append(self.row)
 
         # Determine row
         if opponentColour == Colour.RED:
-            for x in range(0,5):
-                for y in range(11):
-                    self.getNode(x, y).row = -x - 1
-
-            for x in range(5,11):
-                for y in range(11):
-                    self.getNode(x, y).row = 11 - x
-        
-        elif opponentColour == Colour.BLUE:
             for x in range(11):
                 for y in range(0,5):
                     self.getNode(x, y).row = -y - 1
@@ -33,6 +24,15 @@ class Board:
             for x in range(11):
                 for y in range(5,11):
                     self.getNode(x, y).row = 11 - y
+
+        elif opponentColour == Colour.BLUE:
+            for x in range(0,5):
+                for y in range(11):
+                    self.getNode(x, y).row = -x - 1
+
+            for x in range(5,11):
+                for y in range(11):
+                    self.getNode(x, y).row = 11 - x
 
         # Initialise nodes
         for x in range(11):
@@ -56,7 +56,7 @@ class Board:
         if x < 0 or x > 10 or y < 0 or y > 10:
             return None
         else:
-            return self.array[x][y]
+            return self.array[y][x]
 
     def selfMove(self, x, y):
         self.getNode(x, y).occupiedBy = Player.SELF
