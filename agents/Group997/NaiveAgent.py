@@ -24,6 +24,7 @@ class NaiveAgent(AgentBase):
         self._choices = [
             (i, j) for i in range(self._board_size) for j in range(self._board_size)
         ]
+        self.internalBoard = Internal.Board(colour)
 
     def make_move(self, turn: int, board: Board, opp_move: Move | None) -> Move:
         """The game engine will call this method to request a move from the agent.
@@ -40,6 +41,10 @@ class NaiveAgent(AgentBase):
         Returns:
             Move: The agent move
         """
+        self.internalBoard.oppenentMakesMove(opp_move)
+        self.internalBoard.getValidMoves()
+        self.internalBoard.playerMakeMove(move)
+
         # if turn == 2 and choice([0, 1]) == 1:
         if turn == 2:
             return Move(-1, -1)

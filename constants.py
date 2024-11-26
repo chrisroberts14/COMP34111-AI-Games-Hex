@@ -4,7 +4,7 @@ class Player(Enum):
     SELF = 1
     OPPONENT = 2
 
-class Neighbour(IntEnum):
+class TileNeighbours(IntEnum):
     NORTH_WEST = 0
     NORTH_EAST = 1
     EAST = 2
