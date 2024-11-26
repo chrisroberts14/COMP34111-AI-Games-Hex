@@ -111,8 +111,13 @@ class Board:
 
         return output
 
-    # def getValidMoves(self):
-        
+    def get_valid_moves(self):
+        valid_moves = []
+        for row in self.array_of_tiles:
+            for tile in row:
+                if tile.occupied_by == None and tile.abandoned == False:
+                    valid_moves.append(tile)
+        return valid_moves
         
     # def isWinnable(self):
 
