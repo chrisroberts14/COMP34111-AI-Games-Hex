@@ -6,17 +6,17 @@ class Node:
 
 class EmptyNode(Node):
     def __init__(self, northWestNeighbour=None, northEastNeighbour=None, eastNeighbour=None, southEastNeighbour=None, southWestNeighbour=None, westNeighbour=None):
-        super().__init__()
+        super().__init__(northWestNeighbour, northEastNeighbour, eastNeighbour, southEastNeighbour, southWestNeighbour, westNeighbour)
         self.occupiedBy = None
 
 class OpponentNode(Node):
     def __init__(self, northWestNeighbour=None, northEastNeighbour=None, eastNeighbour=None, southEastNeighbour=None, southWestNeighbour=None, westNeighbour=None):
-        super().__init__()
+        super().__init__(northWestNeighbour, northEastNeighbour, eastNeighbour, southEastNeighbour, southWestNeighbour, westNeighbour)
         self.occupiedBy = Player.OPPONENT
 
 class SelfNode(Node):
     def __init__(self, northWestNeighbour=None, northEastNeighbour=None, eastNeighbour=None, southEastNeighbour=None, southWestNeighbour=None, westNeighbour=None):
-        super().__init__()
+        super().__init__(northWestNeighbour, northEastNeighbour, eastNeighbour, southEastNeighbour, southWestNeighbour, westNeighbour)
         self.occupiedBy = Player.SELF
 
 class Template:
