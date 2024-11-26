@@ -128,6 +128,8 @@ def look_for_guaranteed_edge_templates(played_tile):
     elif (abs(played_tile.row) == 3):
         if (template_exists_on_board(template.row3Template.tile_of_origin, played_tile)):
             abandon_tiles_that_are_empty_in_the_template(played_tile, template.row3Template.tile_of_origin)
+        if (template_exists_on_board(template.row3TemplateMirror.tile_of_origin, played_tile)):
+            abandon_tiles_that_are_empty_in_the_template(played_tile, template.row3TemplateMirror.tile_of_origin)
     
 
 def template_exists_on_board(template_tile, board_tile):
