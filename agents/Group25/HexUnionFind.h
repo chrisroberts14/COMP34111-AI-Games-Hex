@@ -25,14 +25,8 @@ std::vector<std::pair<int, int>> get_neighbors(int x, int y);
   bool check_winner(std::string player);
 
 public:
-  explicit HexUnionFind(int board_size, std::set<std::pair<int, int>> red_moves, std::set<std::pair<int, int>> blue_moves);
+  HexUnionFind(int board_size, std::set<std::pair<int, int>> red_moves, std::set<std::pair<int, int>> blue_moves);
   bool add_move(int x, int y, std::string player);
-
-  void output_board();
-  void output_parents();
-
 };
-
-
 
 #endif //HEXUNIONFIND_H

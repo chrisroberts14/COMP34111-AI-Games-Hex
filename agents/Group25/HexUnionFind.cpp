@@ -73,26 +73,3 @@ bool HexUnionFind::check_winner(std::string player) {
   return false;
 }
 
-void HexUnionFind::output_board() {
-  for (int i = 0; i < board_size; ++i) {
-    // output spaces for each row
-    for (int j = 0; j < i; ++j) {
-      std::cerr << " ";
-    }
-    for (int j = 0; j < board_size; ++j) {
-      if (red_moves.count({i, j})) {
-        std::cerr << "R ";
-      } else if (blue_moves.count({i, j})) {
-        std::cerr << "B ";
-      } else {
-        std::cerr << ". ";
-        }
-    }
-    std::cerr << std::endl;
-  }
-}
-
-void HexUnionFind::output_parents() {
-  uf.output_parents();
-}
-
