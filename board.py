@@ -1,5 +1,5 @@
-import template
-from tile import Tile
+from template import Templates
+from tile import BoardTile
 from src.Colour import Colour
 from constants import Player, TileNeighbours
 from rich.console import Console
@@ -15,7 +15,7 @@ class Board:
         for row_index in range(11):
             row_of_tiles = []
             for column_index in range(11):
-                row_of_tiles.append(Tile(x=column_index, y=row_index))
+                row_of_tiles.append(BoardTile(x=column_index, y=row_index))
             self.array_of_tiles.append(row_of_tiles)
 
         # Determine row
@@ -123,13 +123,12 @@ class Board:
 
 def look_for_guaranteed_edge_templates(played_tile): 
     if (abs(played_tile.row) == 2):
-        if (template_exists_on_board(template.row2Template.tile_of_origin, played_tile)):
-            abandon_tiles_that_are_empty_in_the_template(played_tile, template.row2Template.tile_of_origin)
+        if (template_exists_on_board(Templates.row_2.tile_of_origin, played_tile)):
+            abandon_tiles_that_are_empty_in_the_template(played_tile, Templates.row_2.tile_of_origin)
     elif (abs(played_tile.row) == 3):
-        if (template_exists_on_board(template.row3Template.tile_of_origin, played_tile)):
-            abandon_tiles_that_are_empty_in_the_template(played_tile, template.row3Template.tile_of_origin)
-        if (template_exists_on_board(template.row3TemplateMirror.tile_of_origin, played_tile)):
-            abandon_tiles_that_are_empty_in_the_template(played_tile, template.row3TemplateMirror.tile_of_origin)
+        for row_3_template in Templates.row_3:
+            if (template_exists_on_board(row_3_template.tile_of_origin, played_tile)):
+                abandon_tiles_that_are_empty_in_the_template(played_tile, row_3_template.tile_of_origin)
     
 
 def template_exists_on_board(template_tile, board_tile):

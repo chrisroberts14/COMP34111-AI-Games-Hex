@@ -24,18 +24,17 @@ class PlayerTile(TemplateTile):
         super().__init__(north_west_neighbour, north_east_neighbour, east_neighbour, south_east_neighbour, south_west_neighbour, west_neighbour)
         self.occupied_by = Player.SELF
 
-row2Template = Template(2, OpponentTile(south_west_neighbour=EmptyTile(), south_east_neighbour=EmptyTile()))
+class Templates:
+    row_2 = Template(2, OpponentTile(south_west_neighbour=EmptyTile(), south_east_neighbour=EmptyTile()))
 
-row3TemplateMirror = Template(3, OpponentTile(south_west_neighbour=EmptyTile(south_west_neighbour=EmptyTile(), south_east_neighbour=EmptyTile()), 
-                                            south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()),
-                                            east_neighbour=EmptyTile(south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()))
-                                            )
-                        )
-row3Template = Template(3, OpponentTile(south_west_neighbour=EmptyTile(south_west_neighbour=EmptyTile(), south_east_neighbour=EmptyTile()), 
-                                        south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()),
-                                        west_neighbour=EmptyTile(south_west_neighbour=EmptyTile(south_west_neighbour=EmptyTile()))
-                                        )
-                        )
-
-
-
+    row_3 = [Template(3, OpponentTile(south_west_neighbour=EmptyTile(south_west_neighbour=EmptyTile(), south_east_neighbour=EmptyTile()), 
+                            south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()),
+                            east_neighbour=EmptyTile(south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()))
+                            )
+                ),
+                Template(3, OpponentTile(south_west_neighbour=EmptyTile(south_west_neighbour=EmptyTile(), south_east_neighbour=EmptyTile()), 
+                                    south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()),
+                                    west_neighbour=EmptyTile(south_west_neighbour=EmptyTile(south_west_neighbour=EmptyTile()))
+                                    )
+                    )
+                ]
