@@ -1,20 +1,20 @@
-from constants import Player, TileNeighbours
+from constants import Player
 
-class Tile:
+class TemplateTile:
     def __init__(self, north_west_neighbour=None, north_east_neighbour=None, east_neighbour=None, south_east_neighbour=None, south_west_neighbour=None, west_neighbour=None):
         self.neighbours = [north_west_neighbour, north_east_neighbour, east_neighbour, south_east_neighbour, south_west_neighbour, west_neighbour]
 
-class EmptyTile(Tile):
+class EmptyTile(TemplateTile):
     def __init__(self, north_west_neighbour=None, north_east_neighbour=None, east_neighbour=None, south_east_neighbour=None, south_west_neighbour=None, west_neighbour=None):
         super().__init__(north_west_neighbour, north_east_neighbour, east_neighbour, south_east_neighbour, south_west_neighbour, west_neighbour)
         self.occupied_by = None
 
-class OpponentTile(Tile):
+class OpponentTile(TemplateTile):
     def __init__(self, north_west_neighbour=None, north_east_neighbour=None, east_neighbour=None, south_east_neighbour=None, south_west_neighbour=None, west_neighbour=None):
         super().__init__(north_west_neighbour, north_east_neighbour, east_neighbour, south_east_neighbour, south_west_neighbour, west_neighbour)
         self.occupied_by = Player.OPPONENT
 
-class PlayerTile(Tile):
+class PlayerTile(TemplateTile):
     def __init__(self, north_west_neighbour=None, north_east_neighbour=None, east_neighbour=None, south_east_neighbour=None, south_west_neighbour=None, west_neighbour=None):
         super().__init__(north_west_neighbour, north_east_neighbour, east_neighbour, south_east_neighbour, south_west_neighbour, west_neighbour)
         self.occupied_by = Player.SELF
@@ -27,9 +27,9 @@ class Template:
 row2Template = Template(2, OpponentTile(south_west_neighbour=EmptyTile(), south_east_neighbour=EmptyTile()))
 
 row3TemplateMirror = Template(3, OpponentTile(south_west_neighbour=EmptyTile(south_west_neighbour=EmptyTile(), south_east_neighbour=EmptyTile()), 
-                                        south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()),
-                                        east_neighbour=EmptyTile(south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()))
-                                        )
+                                            south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()),
+                                            east_neighbour=EmptyTile(south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()))
+                                            )
                         )
 row3Template = Template(3, OpponentTile(south_west_neighbour=EmptyTile(south_west_neighbour=EmptyTile(), south_east_neighbour=EmptyTile()), 
                                         south_east_neighbour=EmptyTile(south_east_neighbour=EmptyTile()),

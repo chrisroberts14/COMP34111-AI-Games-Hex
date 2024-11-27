@@ -1,7 +1,7 @@
 from constants import Player, TileNeighbours
 from src.Colour import Colour
 
-class Tile:
+class BoardTile():
     def __init__(self, x, y):
         self.x = x
         self.y = y
