@@ -95,7 +95,7 @@ class Board:
 
     def opponent_makes_move(self, x, y):
         self.get_tile(x, y).occupied_by = Player.OPPONENT
-        look_for_guaranteed_edge_templates(self.get_tile(x, y))
+        look_for_guaranteed_edges_for_the_opponent(self.get_tile(x, y))
                 
     def print_board(self) -> str:
         """Returns the string representation of a board."""
@@ -121,7 +121,7 @@ class Board:
         
     # def isWinnable(self):
 
-def look_for_guaranteed_edge_templates(played_tile): 
+def look_for_guaranteed_edges_for_the_opponent(played_tile): 
     if (abs(played_tile.row) == 2):
         if (guaranteed_edge_template_exists_on_board(played_tile, Templates.row_2.tile_of_origin)):
             abandon_tiles_that_are_empty_in_the_guaranteed_edge_template(played_tile, Templates.row_2.tile_of_origin)
