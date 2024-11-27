@@ -10,38 +10,47 @@ class BoardTile():
 
         self.abandoned = False
 
-        self.neighbours = [None, None, None, None, None, None]
+        self.relative_neighbours = [None, None, None, None, None, None]
+        self.fixed_neighbours = [None, None, None, None, None, None]
 
         self.occupied_by = None
         self.bridgable = False
         self.createsBridge = False
 
     def add_neighbours(self, board):
+        # Fixed neighbours
+        self.fixed_neighbours[TileNeighbours.NORTH_WEST] = board.get_tile(self.x, self.y-1)
+        self.fixed_neighbours[TileNeighbours.NORTH_EAST] = board.get_tile(self.x+1, self.y-1)
+        self.fixed_neighbours[TileNeighbours.EAST] = board.get_tile(self.x+1, self.y)
+        self.fixed_neighbours[TileNeighbours.SOUTH_EAST] = board.get_tile(self.x, self.y+1)
+        self.fixed_neighbours[TileNeighbours.SOUTH_WEST] = board.get_tile(self.x-1, self.y+1)
+        self.fixed_neighbours[TileNeighbours.WEST] = board.get_tile(self.x-1, self.y)
+        # Relative neighbours
         if self.row > 0 and board.opponent_colour == Colour.RED:
-            self.neighbours[TileNeighbours.NORTH_WEST] = board.get_tile(self.x, self.y-1)
-            self.neighbours[TileNeighbours.NORTH_EAST] = board.get_tile(self.x+1, self.y-1)
-            self.neighbours[TileNeighbours.EAST] = board.get_tile(self.x+1, self.y)
-            self.neighbours[TileNeighbours.SOUTH_EAST] = board.get_tile(self.x, self.y+1)
-            self.neighbours[TileNeighbours.SOUTH_WEST] = board.get_tile(self.x-1, self.y+1)
-            self.neighbours[TileNeighbours.WEST] = board.get_tile(self.x-1, self.y)
+            self.relative_neighbours[TileNeighbours.NORTH_WEST] = board.get_tile(self.x, self.y-1)
+            self.relative_neighbours[TileNeighbours.NORTH_EAST] = board.get_tile(self.x+1, self.y-1)
+            self.relative_neighbours[TileNeighbours.EAST] = board.get_tile(self.x+1, self.y)
+            self.relative_neighbours[TileNeighbours.SOUTH_EAST] = board.get_tile(self.x, self.y+1)
+            self.relative_neighbours[TileNeighbours.SOUTH_WEST] = board.get_tile(self.x-1, self.y+1)
+            self.relative_neighbours[TileNeighbours.WEST] = board.get_tile(self.x-1, self.y)
         elif self.row < 0 and board.opponent_colour == Colour.RED:
-            self.neighbours[TileNeighbours.NORTH_WEST]= board.get_tile(self.x, self.y+1)
-            self.neighbours[TileNeighbours.NORTH_EAST]= board.get_tile(self.x-1, self.y+1)
-            self.neighbours[TileNeighbours.EAST]= board.get_tile(self.x-1, self.y)
-            self.neighbours[TileNeighbours.SOUTH_EAST]= board.get_tile(self.x, self.y-1)
-            self.neighbours[TileNeighbours.SOUTH_WEST]= board.get_tile(self.x+1, self.y-1)
-            self.neighbours[TileNeighbours.WEST]= board.get_tile(self.x+1, self.y)
+            self.relative_neighbours[TileNeighbours.NORTH_WEST]= board.get_tile(self.x, self.y+1)
+            self.relative_neighbours[TileNeighbours.NORTH_EAST]= board.get_tile(self.x-1, self.y+1)
+            self.relative_neighbours[TileNeighbours.EAST]= board.get_tile(self.x-1, self.y)
+            self.relative_neighbours[TileNeighbours.SOUTH_EAST]= board.get_tile(self.x, self.y-1)
+            self.relative_neighbours[TileNeighbours.SOUTH_WEST]= board.get_tile(self.x+1, self.y-1)
+            self.relative_neighbours[TileNeighbours.WEST]= board.get_tile(self.x+1, self.y)
         elif self.row > 0 and board.opponent_colour == Colour.BLUE:
-            self.neighbours[TileNeighbours.NORTH_WEST] = board.get_tile(self.x-1, self.y+1)
-            self.neighbours[TileNeighbours.NORTH_EAST] = board.get_tile(self.x-1, self.y)
-            self.neighbours[TileNeighbours.EAST] = board.get_tile(self.x, self.y-1)
-            self.neighbours[TileNeighbours.SOUTH_EAST] = board.get_tile(self.x+1, self.y-1)
-            self.neighbours[TileNeighbours.SOUTH_WEST] = board.get_tile(self.x+1, self.y)
-            self.neighbours[TileNeighbours.WEST] = board.get_tile(self.x, self.y+1)
+            self.relative_neighbours[TileNeighbours.NORTH_WEST] = board.get_tile(self.x-1, self.y+1)
+            self.relative_neighbours[TileNeighbours.NORTH_EAST] = board.get_tile(self.x-1, self.y)
+            self.relative_neighbours[TileNeighbours.EAST] = board.get_tile(self.x, self.y-1)
+            self.relative_neighbours[TileNeighbours.SOUTH_EAST] = board.get_tile(self.x+1, self.y-1)
+            self.relative_neighbours[TileNeighbours.SOUTH_WEST] = board.get_tile(self.x+1, self.y)
+            self.relative_neighbours[TileNeighbours.WEST] = board.get_tile(self.x, self.y+1)
         elif self.row < 0 and board.opponent_colour == Colour.BLUE:
-            self.neighbours[TileNeighbours.NORTH_WEST] = board.get_tile(self.x+1, self.y-1)
-            self.neighbours[TileNeighbours.NORTH_EAST] = board.get_tile(self.x+1, self.y)
-            self.neighbours[TileNeighbours.EAST] = board.get_tile(self.x, self.y+1)
-            self.neighbours[TileNeighbours.SOUTH_EAST] = board.get_tile(self.x-1, self.y+1)
-            self.neighbours[TileNeighbours.SOUTH_WEST] = board.get_tile(self.x-1, self.y)
-            self.neighbours[TileNeighbours.WEST] = board.get_tile(self.x, self.y-1)
+            self.relative_neighbours[TileNeighbours.NORTH_WEST] = board.get_tile(self.x+1, self.y-1)
+            self.relative_neighbours[TileNeighbours.NORTH_EAST] = board.get_tile(self.x+1, self.y)
+            self.relative_neighbours[TileNeighbours.EAST] = board.get_tile(self.x, self.y+1)
+            self.relative_neighbours[TileNeighbours.SOUTH_EAST] = board.get_tile(self.x-1, self.y+1)
+            self.relative_neighbours[TileNeighbours.SOUTH_WEST] = board.get_tile(self.x-1, self.y)
+            self.relative_neighbours[TileNeighbours.WEST] = board.get_tile(self.x, self.y-1)

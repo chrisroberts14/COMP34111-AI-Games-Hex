@@ -123,31 +123,31 @@ class Board:
 
 def look_for_guaranteed_edge_templates(played_tile): 
     if (abs(played_tile.row) == 2):
-        if (template_exists_on_board(Templates.row_2.tile_of_origin, played_tile)):
-            abandon_tiles_that_are_empty_in_the_template(played_tile, Templates.row_2.tile_of_origin)
+        if (guaranteed_edge_template_exists_on_board(played_tile, Templates.row_2.tile_of_origin)):
+            abandon_tiles_that_are_empty_in_the_guaranteed_edge_template(played_tile, Templates.row_2.tile_of_origin)
     elif (abs(played_tile.row) == 3):
         for row_3_template in Templates.row_3:
-            if (template_exists_on_board(row_3_template.tile_of_origin, played_tile)):
-                abandon_tiles_that_are_empty_in_the_template(played_tile, row_3_template.tile_of_origin)
+            if (guaranteed_edge_template_exists_on_board(played_tile, row_3_template.tile_of_origin)):
+                abandon_tiles_that_are_empty_in_the_guaranteed_edge_template(played_tile, row_3_template.tile_of_origin)
     
 
-def template_exists_on_board(template_tile, board_tile):
+def guaranteed_edge_template_exists_on_board(board_tile, template_tile):
     for tile_neighbour in TileNeighbours:
         if template_tile.neighbours[tile_neighbour] == None:
             continue
-        elif template_tile.neighbours[tile_neighbour].occupied_by != board_tile.neighbours[tile_neighbour].occupied_by:
+        elif template_tile.neighbours[tile_neighbour].occupied_by != board_tile.relative_neighbours[tile_neighbour].occupied_by:
             return False
-        elif template_tile.neighbours[tile_neighbour].occupied_by == board_tile.neighbours[tile_neighbour].occupied_by:
-            template_exists_on_board(template_tile.neighbours[tile_neighbour], board_tile.neighbours[tile_neighbour])
+        elif template_tile.neighbours[tile_neighbour].occupied_by == board_tile.relative_neighbours[tile_neighbour].occupied_by:
+            guaranteed_edge_template_exists_on_board(board_tile.relative_neighbours[tile_neighbour], template_tile.neighbours[tile_neighbour], )
     return True
 
-def abandon_tiles_that_are_empty_in_the_template(board_tile, template_tile):
+def abandon_tiles_that_are_empty_in_the_guaranteed_edge_template(board_tile, template_tile):
     for tile_neighbour in TileNeighbours:
         if template_tile.neighbours[tile_neighbour] == None:
             continue
         else:
-            board_tile.neighbours[tile_neighbour].abandoned = True
-            abandon_tiles_that_are_empty_in_the_template(board_tile.neighbours[tile_neighbour], template_tile.neighbours[tile_neighbour])
+            board_tile.relative_neighbours[tile_neighbour].abandoned = True
+            abandon_tiles_that_are_empty_in_the_guaranteed_edge_template(board_tile.relative_neighbours[tile_neighbour], template_tile.neighbours[tile_neighbour])
     return True
 
 board = Board(player_colour=Colour.BLUE)
