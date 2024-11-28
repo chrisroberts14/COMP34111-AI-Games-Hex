@@ -5,6 +5,7 @@
 #ifndef MCTSAGENT_H
 #define MCTSAGENT_H
 
+#include <iostream>
 #include <string>
 #include "MCTSNode.h"
 
@@ -14,7 +15,8 @@ class MCTSAgent {
   int boardSize;
 
 public:
-  MCTSAgent(std::string agentColour, int gameBoardSize);
+  MCTSAgent(std::string agentColour, int gameBoardSize)
+      : colour(std::move(agentColour)), turn(0), boardSize(gameBoardSize) {};
 
   static std::string getMessage();
 

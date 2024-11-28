@@ -5,6 +5,7 @@ Once done it will print the results of the games
 import argparse
 import importlib
 import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 
 from src.Colour import Colour
 from src.Game_No_Logging import Game
@@ -87,7 +88,7 @@ if __name__ == "__main__":
         for _ in range(args.num_games // 2)
     ]
     games = games_p1_first + games_p2_first
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    with ThreadPoolExecutor(max_workers=10) as executor:
         results = list(executor.map(run_game, games))
 
     print("Results:")
