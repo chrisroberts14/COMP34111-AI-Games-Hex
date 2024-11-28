@@ -39,11 +39,3 @@ void UnionFind::union_sets(int x, int y) {
 bool UnionFind::connected(int x, int y) {
   return find(x) == find(y);
 }
-
-void UnionFind::output_parents() {
-  for (int x = 0; x < 11; x++){
-    for (int y = 0; y < 11; y++){
-      std::cerr << x << ", " << y << ": " << find(x * 11 + y) << std::endl;
-    }
-  }
-}

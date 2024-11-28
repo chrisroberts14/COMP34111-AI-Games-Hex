@@ -46,9 +46,6 @@ std::tuple<std::set<std::pair<int, int>>, std::set<std::pair<int, int>>, std::se
   return {red_moves, blue_moves, open_moves};
 }
 
-MCTSAgent::MCTSAgent(std::string agentColour, int gameBoardSize)
-  : colour(std::move(agentColour)), turn(0), boardSize(gameBoardSize) {}
-
 inline std::string MCTSAgent::getMessage() {
   std::string message;
   std::getline(std::cin, message);
@@ -61,6 +58,7 @@ inline void MCTSAgent::sendMessage(const std::string &msg) {
 }
 
 void MCTSAgent::run() {
+  std::cerr << "Starting colour: " << colour << std::endl;
   while (true) {
     try {
       if (std::string msg = getMessage(); !interpretMessage(msg)) {
@@ -86,7 +84,7 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
 
   // msg[1] is the previous move in the form "x,y"
   // Convert this to a pair
-  /*std::pair prev_move = {-2, -2};
+  std::pair prev_move = {-2, -2};
   if (!msg[1].empty()) {
     std::stringstream ss2(msg[1]);
     std::string item2;
@@ -94,9 +92,18 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
     prev_move.first = std::stoi(item2);
     std::getline(ss2, item2, ',');
     prev_move.second = std::stoi(item2);
-  }*/
+  }
   const std::string board = msg[2];
   turn = std::stoi(msg[3]);
+  if (turn == 2) {
+    if (prev_move.first > 1 && prev_move.second > 1 && prev_move.first < 9 && prev_move.second < 9) {
+      sendMessage("-1,-1");
+      colour = colour == "R" ? "B" : "R";
+    } else {
+      sendMessage("5,5");
+    }
+    return true;
+  }
   if (msg[0] == "START") {
     if (colour == "R") {
       makeMove(board);
@@ -104,6 +111,7 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
   } else if (msg[0] == "CHANGE") {
     makeMove(board);
   } else if (msg[0] == "SWAP") {
+    std::cerr << "SWAP" << std::endl;
     colour = colour == "R" ? "B" : "R";
     makeMove(board);
   } else {
@@ -124,18 +132,23 @@ void MCTSAgent::makeMove(const std::string &board) const {
 
   if (turn == 1) {
     // Make a random move
-    sendMessage(std::to_string(1) + "," +
-                std::to_string(2));
+    sendMessage(std::to_string(5) + "," +
+                std::to_string(5));
     return;
   }
-
-  if (turn == 2) {
-      sendMessage("-1,-1");
-      return;
-  }
-
+  std::cerr << "Our agent is: " << colour << std::endl;
   MCTSNode root(red_moves, blue_moves, open_moves, colour, nullptr, {-1, -1});
-  root.generate_all_children_nodes();
+
+  std::cerr << "Root node is made" << std::endl;
+  // Short circuit moves
+  if (auto [heuristic_check_fst, heuristic_check_snd] = root.generate_all_children_nodes(); heuristic_check_fst != -1) {
+    std::cerr << "Heuristic short circuit" << std::endl;
+    sendMessage(std::to_string(heuristic_check_fst) + "," +
+                std::to_string(heuristic_check_snd));
+    root.delete_children();
+    return;
+  }
+  std::cerr << "Children generated" << std::endl;
 
   int count = 0;
   constexpr double turn_time = 10000;
@@ -148,13 +161,17 @@ void MCTSAgent::makeMove(const std::string &board) const {
                  .count() -
              loop_start_time <
          static_cast<long>(turn_time)) {
+  //for (int i = 0; i < 10000; ++i) {
     count++;
     MCTSNode *node = root.best_child(EXPLORATION_CONSTANT);
-    double result = node->simulate_from_node();
-    if (result > 1) {
-      std::cerr << result << std::endl;
+    const double result = node->simulate_from_node(colour);
+    if (result == 2.0) {
+      // This node is a win
+      // So short circuit the rest of the simulation
+      node->backpropagate(1000000);
+      break;
     }
-    node->backpropagate(result, 1);
+    node->backpropagate(result);
          }
   std::cerr << "iteration count: " << count << std::endl;
 

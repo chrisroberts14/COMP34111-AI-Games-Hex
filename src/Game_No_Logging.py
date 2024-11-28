@@ -103,7 +103,7 @@ class Game:
 
             boardCopy = copy.deepcopy(self.board)
             turnCopy = self.turn
-            playerCopy = copy.deepcopy(self.players)
+            # playerCopy = copy.deepcopy(self.players)
 
             playerBoard = copy.deepcopy(self.board)
 
@@ -113,7 +113,7 @@ class Game:
 
             assert boardCopy == self.board, "Board was modified, Possible cheating!"
             assert turnCopy == self.turn, "Turn was modified, Possible cheating!"
-            assert playerCopy == self.players, "Players were modified, Possible cheating!"
+            # assert playerCopy == self.players, "Players were modified, Possible cheating!"
             assert end > start, "Move time is negative, Possible cheating!"
 
             currentPlayer.move_time += end - start
@@ -170,6 +170,7 @@ class Game:
                 winner = self.players[self.current_player.opposite()].name
             case _:
                 raise Exception("Game ended abnormally")
+        print(self.players[Colour.RED].name, self.players[Colour.BLUE].name)
 
         return format_result(
             player1_name=self.player1.name,

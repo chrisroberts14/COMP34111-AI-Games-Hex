@@ -684,13 +684,11 @@ class MCTSAgent(AgentBase):
         root = MCTSNode(state=board, agent_colour=self.colour)
         root.generate_all_children_nodes(self.colour)
 
-
-
         # Should use some time limit here based on how much time we have left
         start = time.time()
         iteration_count = 0
 
-        while time.time() - start < 10:
+        while time.time() - start < 1:
             iteration_count += 1
             # Use the tree policy to select the best node
             # Uses UCT to select the best node

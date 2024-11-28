@@ -9,7 +9,7 @@
 #include <set>
 
 class MCTSNode {
-  std::string colour;
+  std::string colour_to_play;
   MCTSNode *parent;
   std::vector<MCTSNode *> children;
   int visits;
@@ -24,14 +24,15 @@ public:
   MCTSNode(std::set<std::pair<int, int>> red_moves, std::set<std::pair<int, int>> blue_moves, std::set<std::pair<int, int>> open_moves, std::string colour, MCTSNode *parent,
            std::pair<int, int> move);
 
-  void backpropagate(double result, int visits = 1);
+  void backpropagate(double result);
   MCTSNode *best_child(float c);
-  [[nodiscard]] double simulate_from_node();
-  void generate_all_children_nodes();
+  [[nodiscard]] double simulate_from_node(const std::string& positive_colour);
+  std::pair<int, int> generate_all_children_nodes();
   std::pair<int, int> get_best_move();
   [[nodiscard]] MCTSNode *get_child(int index) const;
   [[nodiscard]] unsigned long get_children_size() const;
   void delete_children();
+  void setPayoffSum(double value);
 };
 
 #endif // MCTSNODE_H

@@ -16,7 +16,6 @@ public:
   int find(int x);
   void union_sets(int x, int y);
   bool connected(int x, int y);
-  void output_parents();
 };
 
 

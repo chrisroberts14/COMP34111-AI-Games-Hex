@@ -20,13 +20,13 @@ int right;
   std::set<std::pair<int, int>> red_moves;
   std::set<std::pair<int, int>> blue_moves;
 
-int position_to_index(int x, int y);
-std::vector<std::pair<int, int>> get_neighbors(int x, int y);
-  bool check_winner(std::string player);
+[[nodiscard]] int position_to_index(int x, int y) const;
+[[nodiscard]] std::vector<std::pair<int, int>> get_neighbors(int x, int y) const;
 
 public:
-  HexUnionFind(int board_size, std::set<std::pair<int, int>> red_moves, std::set<std::pair<int, int>> blue_moves);
-  bool add_move(int x, int y, std::string player);
+  bool check_winner(const std::string& player);
+  HexUnionFind(int board_size, const std::set<std::pair<int, int>>& red_moves, const std::set<std::pair<int, int>>& blue_moves);
+  bool add_move(int x, int y, const std::string& player);
 };
 
 #endif //HEXUNIONFIND_H
