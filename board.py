@@ -152,10 +152,12 @@ def abandon_tiles_that_are_empty_in_the_guaranteed_edge_template(board_tile, tem
 
 board = Board(player_colour=Colour.BLUE)
 print(board.display_row_numbers())
-board.opponent_makes_move(4,8)
-board.opponent_makes_move(8,9)
-board.opponent_makes_move(2,1)
-board.opponent_makes_move(7,2)
-board.display_abandoned_tiles()
 
-board.display_abandoned_tiles()
+board = Board(player_colour=Colour.RED)
+print(board.display_row_numbers())
+# board.opponent_makes_move(4,8)
+# board.opponent_makes_move(8,9)
+# board.opponent_makes_move(2,1)
+# board.opponent_makes_move(7,2)
+
+# board.display_abandoned_tiles()
