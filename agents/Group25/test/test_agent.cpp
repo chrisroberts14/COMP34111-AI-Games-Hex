@@ -132,7 +132,6 @@ TEST(MCTSAgentTest, TestAgentSwap) {
     EXPECT_EQ(start_move(board, agent, red_moves), "5,5");
 
     Heuristic heuristic(red_moves, blue_moves);
-    heuristic.generate_values();
     // The agent is now blue
     board = convert_sets_to_board_string(red_moves, blue_moves, 11);
     swap_move(board, agent, blue_moves);
@@ -146,7 +145,6 @@ TEST(MCTSAgentTest, TestAgentSwap) {
     // The agent should return 1, 0
     output_board(red_moves, blue_moves);
     heuristic = Heuristic(red_moves, blue_moves);
-    heuristic.generate_values();
     std::cout << heuristic.get_value(1, 0, "B") << std::endl;
     std::cout << heuristic.get_value(1, 0, "R") << std::endl;
     board = convert_sets_to_board_string(red_moves, blue_moves, 11);
@@ -205,6 +203,25 @@ TEST(MCTSAgentTest, shouldPickWinRed) {
     std::string response = testing::internal::GetCapturedStdout();
     response.erase(response.find_last_not_of(" \n\r\t") + 1);
     EXPECT_EQ(response, "10,0");
+}
+
+TEST(MCTSAgentTest, Edge) {
+    MCTSAgent agent("B", 11);
+    const std::set<std::pair<int, int>> red_moves = {{0, 8}, {0, 10},
+ {3, 4}, {3, 9}, {4, 3}, {4, 6}, {6, 2}, {7, 2}, {8, 0}, {9, 1}};
+    const std::set<std::pair<int, int>> blue_moves = {
+        {4, 0}, {4, 1}, {4, 4}, {5,2}, {5,5}, {5, 8},
+          {6, 3}, {6,5}, {6, 7}
+    };
+    EXPECT_EQ(red_moves.size(), 10);
+    EXPECT_EQ(blue_moves.size(), 9);
+    testing::internal::CaptureStdout();
+    const std::string board = convert_sets_to_board_string(red_moves, blue_moves, 11);
+    const std::string message = "CHANGE;10,10;" + board + ";5;\n";
+    agent.interpretMessage(message);
+    std::string response = testing::internal::GetCapturedStdout();
+    response.erase(response.find_last_not_of(" \n\r\t") + 1);
+    EXPECT_EQ(response, "5,3");
 }
 
 int main(int argc, char **argv) {

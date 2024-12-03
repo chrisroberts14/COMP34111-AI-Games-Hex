@@ -37,7 +37,7 @@ class Game:
 
     # the maximum time allocated for a match per player
     # 5 minutes in nanoseconds (min * s/min * ns/s)
-    MAXIMUM_TIME = 5 * 60 * 10**9
+    MAXIMUM_TIME = 120 * 60 * 10**9
     # 1 second in nanoseconds
     # MAXIMUM_TIME = 10**9
 

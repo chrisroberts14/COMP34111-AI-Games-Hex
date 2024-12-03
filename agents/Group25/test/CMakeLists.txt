@@ -10,9 +10,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 find_package(GTest REQUIRED)
 
 # Add the test source files
-add_executable(test_heuristic test_heuristic.cpp ../Heuristic.cpp ../HexUnionFind.cpp ../UnionFind.cpp)
-add_executable(test_unionfind test_unionfind.cpp ../HexUnionFind.cpp ../UnionFind.cpp)
-add_executable(test_agent test_agent.cpp ../MCTSAgent.cpp ../MCTSNode.cpp ../Heuristic.cpp ../HexUnionFind.cpp ../UnionFind.cpp)
+add_executable(test_heuristic test_heuristic.cpp ../../Group25-AZ/Heuristic.cpp ../../OldCPP/HexUnionFind.cpp ../../OldCPP/UnionFind.cpp)
+add_executable(test_unionfind test_unionfind.cpp ../../OldCPP/HexUnionFind.cpp ../../OldCPP/UnionFind.cpp)
+add_executable(test_agent test_agent.cpp ../MCTSAgent.cpp ../MCTSNode.cpp ../../Group25-AZ/Heuristic.cpp ../../OldCPP/HexUnionFind.cpp ../../OldCPP/UnionFind.cpp)
 
 # Link Google Test libraries
 target_link_libraries(test_unionfind PRIVATE GTest::gtest GTest::gtest_main)

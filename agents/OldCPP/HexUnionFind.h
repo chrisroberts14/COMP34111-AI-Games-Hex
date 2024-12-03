@@ -27,6 +27,7 @@ public:
   bool check_winner(const std::string& player);
   HexUnionFind(int board_size, const std::set<std::pair<int, int>>& red_moves, const std::set<std::pair<int, int>>& blue_moves);
   bool add_move(int x, int y, const std::string& player);
+  std::vector<std::set<std::pair<int, int>>> get_groups(const std::set<std::pair<int, int>>& moves);
 };
 
 #endif //HEXUNIONFIND_H
