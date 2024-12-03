@@ -80,3 +80,23 @@ bool HexUnionFind::check_winner(const std::string& player) {
     if (player == "B") return uf.connected(left, right);
     return false;
 }
+
+std::vector<std::set<std::pair<int, int> > > HexUnionFind::get_groups(const std::set<std::pair<int, int> >& moves) {
+    std::vector<std::set<std::pair<int, int> > > groups;
+    std::vector<int> indices;
+    for (const auto& [x, y]: moves) {
+        indices.push_back(position_to_index(x, y));
+    }
+    for (int index: indices) {
+        std::set<std::pair<int, int> > group;
+        for (int i = 0; i < board_size; ++i) {
+            for (int j = 0; j < board_size; ++j) {
+                if (uf.connected(index, position_to_index(i, j))) {
+                    group.insert({i, j});
+                }
+            }
+        }
+        groups.push_back(group);
+    }
+    return groups;
+}

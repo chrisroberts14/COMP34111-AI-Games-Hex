@@ -3,15 +3,18 @@
 //
 
 #include "Heuristic.h"
+
+#include <algorithm>
 #include <utility>
 #include <vector>
 #include <set>
 #include <string>
 #include <iostream>
+#include <queue>
 
-#include "HexUnionFind.h"
+#include "DFS.h"
 
-static std::vector<std::pair<int, int> > directions = {
+static std::vector<std::pair<int, int> > bridge_directions = {
     {-2, 1}, // North
     {-1, 2}, // North East
     {1, 1}, // South East
@@ -23,6 +26,19 @@ static std::vector<std::pair<int, int> > directions = {
 
 Heuristic::Heuristic(std::set<std::pair<int, int> > red_moves, std::set<std::pair<int, int> > blue_moves)
     : red_moves(std::move(red_moves)), blue_moves(std::move(blue_moves)) {
+    generate_values();
+}
+
+std::set<std::pair<int, int>> Heuristic::get_free_tiles(){
+    std::set<std::pair<int, int>> free_tiles;
+    for (int i = 0; i < 11; ++i) {
+        for (int j = 0; j < 11; ++j) {
+            if (std::pair tile = {i, j}; is_tile_free(tile)) {
+                free_tiles.insert(tile);
+            }
+        }
+    }
+    return free_tiles;
 }
 
 
@@ -31,25 +47,25 @@ bool Heuristic::isPathClear(std::pair<int, int> start, std::pair<int, int> end) 
         return true;
     }
 
-    for (const auto &direction: directions) {
+    for (const auto &direction: bridge_directions) {
         if (end == direction) {
             std::pair<int, int> first_node, second_node;
-            if (direction == directions[0]) {
+            if (direction == bridge_directions[0]) {
                 first_node = {start.first - 1, start.second};
                 second_node = {start.first - 1, start.second + 1};
-            } else if (direction == directions[1]) {
+            } else if (direction == bridge_directions[1]) {
                 first_node = {start.first - 1, start.second + 1};
                 second_node = {start.first, start.second + 1};
-            } else if (direction == directions[2]) {
+            } else if (direction == bridge_directions[2]) {
                 first_node = {start.first, start.second + 1};
                 second_node = {start.first + 1, start.second};
-            } else if (direction == directions[3]) {
+            } else if (direction == bridge_directions[3]) {
                 first_node = {start.first + 1, start.second};
                 second_node = {start.first + 1, start.second - 1};
-            } else if (direction == directions[4]) {
+            } else if (direction == bridge_directions[4]) {
                 first_node = {start.first + 1, start.second - 1};
                 second_node = {start.first, start.second - 1};
-            } else if (direction == directions[5]) {
+            } else if (direction == bridge_directions[5]) {
                 first_node = {start.first, start.second - 1};
                 second_node = {start.first - 1, start.second};
             }
@@ -88,7 +104,7 @@ double Heuristic::get_centre_value(const int x, const int y) {
     // Calculate how close the node is to the center of the board
     // The closer the node is to the center the higher the value
     // The further the node is from the center the lower the value
-    return 0.5 / (1 + (std::abs(5 - x) + std::abs(5 - y)));
+    return 0.05 / (1 + (std::abs(5 - x) + std::abs(5 - y)));
 }
 
 bool Heuristic::are_both_red(const std::pair<int, int> &start, const std::pair<int, int> &end) {
@@ -144,7 +160,7 @@ bool Heuristic::can_complete_path_with_bridges(const std::string &colour) {
         for (int col = 0; col < 11; col++) {
             std::pair start_tile = {row, col};
             // For each direction get the bridge nodes in every direction
-            for (const auto &direction: directions) {
+            for (const auto &direction: bridge_directions) {
                 if (std::pair bridge_tile = {row + direction.first, col + direction.second}; (
                     is_coordinate_valid(bridge_tile) || (
                         (bridge_tile.first == 11 || bridge_tile.first == -1) && colour == "R") || (
@@ -171,60 +187,46 @@ bool Heuristic::can_complete_path_with_bridges(const std::string &colour) {
             }
         }
     }
-    if (colour == "R") {
-        HexUnionFind uf(11, red_moves_with_bridges, blue_moves);
-        return uf.check_winner("R");
-    }
-    HexUnionFind uf(11, red_moves, blue_moves_with_bridges);
-    return uf.check_winner("B");
+    DFS dfs(red_moves_with_bridges, blue_moves_with_bridges);
+    return dfs.get_winner() == colour;
 }
 
 std::pair<std::pair<int, int>, std::pair<int, int> > Heuristic::get_bridge_nodes(
     const std::pair<int, int> &start, const std::pair<int, int> &direction) {
     // Get the two nodes which are adjacent to the start node and end node
     std::pair<int, int> first_node, second_node;
-    if (direction == directions[0]) {
+    if (direction == bridge_directions[0]) {
         first_node = {start.first - 1, start.second};
         second_node = {start.first - 1, start.second + 1};
-    } else if (direction == directions[1]) {
+    } else if (direction == bridge_directions[1]) {
         first_node = {start.first - 1, start.second + 1};
         second_node = {start.first, start.second + 1};
-    } else if (direction == directions[2]) {
+    } else if (direction == bridge_directions[2]) {
         first_node = {start.first, start.second + 1};
         second_node = {start.first + 1, start.second};
-    } else if (direction == directions[3]) {
+    } else if (direction == bridge_directions[3]) {
         first_node = {start.first + 1, start.second};
         second_node = {start.first + 1, start.second - 1};
-    } else if (direction == directions[4]) {
+    } else if (direction == bridge_directions[4]) {
         first_node = {start.first + 1, start.second - 1};
         second_node = {start.first, start.second - 1};
-    } else if (direction == directions[5]) {
+    } else if (direction == bridge_directions[5]) {
         first_node = {start.first, start.second - 1};
         second_node = {start.first - 1, start.second};
     }
     return {first_node, second_node};
 }
 
-void Heuristic::generate_values() {
-    // First component is if placing there creates a bridge
-    // Go through each position on the board
-    // If it is occupied go to all the places a bridge could be created
-    // If it can be created add 5 to the value of the node
-    // Clear the red and blue
-    for (int i = 0; i < 11; i++) {
-        for (int j = 0; j < 11; j++) {
-            red_values[i][j] = 0;
-            blue_values[i][j] = 0;
-        }
-    }
-    for (int i = 0; i < 11; ++i) {
-        for (int j = 0; j < 11; ++j) {
-            // If the tile is occupied
-            if (std::pair start = {i, j}; red_moves.find(start) != red_moves.end() || blue_moves.find(start) !=
-                                          blue_moves.end()) {
-                for (const auto &direction: directions) {
+void Heuristic::add_bridge_values() {
+  // Combine red and blue moves into one set
+  // std::cerr << "Adding bridge values" << std::endl;
+    std::set<std::pair<int, int>> all_moves = red_moves;
+    all_moves.insert(blue_moves.begin(), blue_moves.end());
+    //std::cerr << "All moves size: " << all_moves.size() << std::endl;
+    for (const auto &start: all_moves) {
+                for (const auto &direction: bridge_directions) {
                     // If the path is not clear and both tiles are the same colour TAKE THAT MOVE
-                    const std::pair bridge_move = {i + direction.first, j + direction.second};
+                    const std::pair bridge_move = {start.first + direction.first, start.second + direction.second};
                     if (is_coordinate_valid(bridge_move) || (bridge_move.first == 11 && is_tile_red(start)) || (
                             bridge_move.second == 11 && is_tile_blue(start)) ||
                         (bridge_move.first == -1 && is_tile_red(start)) || (
@@ -241,6 +243,9 @@ void Heuristic::generate_values() {
                                     if (is_coordinate_valid(fst_tile) && is_coordinate_valid(snd_tile)) {
                                         red_values[fst_tile.first][fst_tile.second] = -100000;
                                         red_values[snd_tile.first][snd_tile.second] = -100000;
+                                        // No point placing there if blue anyway so also set this really low
+                                        blue_values[fst_tile.first][fst_tile.second] = -100000;
+                                        blue_values[snd_tile.first][snd_tile.second] = -100000;
                                     }
                                 } else {
                                     auto [fst_tile, snd_tile] = get_bridge_nodes(start, direction);
@@ -264,6 +269,9 @@ void Heuristic::generate_values() {
                                     if (is_coordinate_valid(fst_tile) && is_coordinate_valid(snd_tile)) {
                                         blue_values[fst_tile.first][fst_tile.second] = -100000;
                                         blue_values[snd_tile.first][snd_tile.second] = -100000;
+                                        // No point placing there if red anyway so also set this really low
+                                        red_values[fst_tile.first][fst_tile.second] = -100000;
+                                        red_values[snd_tile.first][snd_tile.second] = -100000;
                                     }
 
                                 } else {
@@ -278,21 +286,48 @@ void Heuristic::generate_values() {
                         if (isPathClear(start, direction)) {
                             // We have already checked the start tile is occupied
                             if (is_tile_free(bridge_move)) {
-                                if (is_tile_red(start) && is_coordinate_valid(bridge_move)) {
-                                    red_values[bridge_move.first][bridge_move.second] = 5;
+                                if (is_coordinate_valid(bridge_move)) {
+                                    // Positive for both red and blue so one can block the move and the other can take it
+                                    red_values[bridge_move.first][bridge_move.second] += 150;
+                                    blue_values[bridge_move.first][bridge_move.second] += 100;
                                 } else if (is_tile_blue(start) && is_coordinate_valid(bridge_move)) {
-                                    blue_values[bridge_move.first][bridge_move.second] = 5;
+                                    blue_values[bridge_move.first][bridge_move.second] += 150;
+                                    red_values[bridge_move.first][bridge_move.second] += 100;
                                 }
                             }
                         }
                     }
                 }
-            }
-            const double center_value = get_centre_value(i, j);
-            red_values[i][j] += center_value;
-            blue_values[i][j] += center_value;
+    }
+    // std::cerr << "Finished adding bridge values" << std::endl;
+}
+
+void Heuristic::add_center_values() {
+    // Tiles closer to the center are more valuable
+    // std::cerr << "Adding center values" << std::endl;
+    for (const auto &start: free_moves) {
+        red_values[start.first][start.second] += get_centre_value(start.first, start.second);
+        blue_values[start.first][start.second] += get_centre_value(start.first, start.second);
+    }
+    // std::cerr << "Finished adding center values" << std::endl;
+}
+
+void Heuristic::generate_values() {
+    // First component is if placing there creates a bridge
+    // Go through each position on the board
+    // If it is occupied go to all the places a bridge could be created
+    // If it can be created add 5 to the value of the node
+    // Clear the red and blue
+    // std::cerr << "Generating values" << std::endl;
+    for (int i = 0; i < 11; i++) {
+        for (int j = 0; j < 11; j++) {
+            red_values[i][j] = 0;
+            blue_values[i][j] = 0;
         }
     }
+    add_bridge_values();
+    add_center_values();
+    // std::cerr << "Finished generating values" << std::endl;
 }
 
 double Heuristic::get_value(const int x, const int y, const std::string &colour) const {
@@ -331,7 +366,7 @@ std::set<std::pair<int, int> > Heuristic::get_all_bridge_nodes(const std::string
     std::set<std::pair<int, int> > blue_bridge_nodes;
     for (int i = 0; i < 11; ++i) {
         for (int j = 0; j < 11; ++j) {
-            for (const auto &direction: directions) {
+            for (const auto &direction: bridge_directions) {
                 std::pair start = {i, j};
                 if (std::pair bridge_tile = {i + direction.first, j + direction.second};
                     are_both_blue(start, bridge_tile) || are_both_red(start, bridge_tile) || (
@@ -353,4 +388,15 @@ std::set<std::pair<int, int> > Heuristic::get_all_bridge_nodes(const std::string
         return red_bridge_nodes;
     }
     return blue_bridge_nodes;
+}
+
+std::vector<std::pair<int, int>> Heuristic::get_neighbours(const std::pair<int, int> &tile, int board_size) {
+    std::vector<std::pair<int, int>> neighbours;
+    std::vector<std::pair<int, int>> deltas = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, 1}, {1, -1}};
+    for (const auto &[fst, snd]: bridge_directions) {
+        if (std::pair neighbour = {tile.first + fst, tile.second + snd}; neighbour.first >= 0 && neighbour.first < board_size && neighbour.second >= 0 && neighbour.second < board_size) {
+            neighbours.emplace_back(neighbour);
+        }
+    }
+    return neighbours;
 }

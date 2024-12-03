@@ -15,10 +15,12 @@
 
 #define DECAY_RATE (-0.05)
 #define EXPLORATION_CONSTANT 1.41
-#define THREAD_COUNT 32
+#define THREAD_COUNT 64
 #define TIME_LIMIT 295
 
 double time_left_ms = TIME_LIMIT * 1000;
+
+std::mt19937 rng(time(nullptr));
 
 std::tuple<std::set<std::pair<int, int>>, std::set<std::pair<int, int>>, std::set<std::pair<int, int>>> convert_board_string(const std::string &board_string, const int boardSize) {
   std::vector<std::string> lines;
@@ -58,7 +60,7 @@ inline void MCTSAgent::sendMessage(const std::string &msg) {
 }
 
 void MCTSAgent::run() {
-  std::cerr << "Starting colour: " << colour << std::endl;
+  //std::cerr << "Starting colour: " << colour << std::endl;
   while (true) {
     try {
       if (std::string msg = getMessage(); !interpretMessage(msg)) {
@@ -100,7 +102,14 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
       sendMessage("-1,-1");
       colour = colour == "R" ? "B" : "R";
     } else {
-      sendMessage("5,5");
+
+      // Make a random move near the center
+      std::uniform_int_distribution<std::mt19937::result_type> coord_dist(3,7);
+      unsigned long row = coord_dist(rng);
+      unsigned long col = coord_dist(rng);
+      //std::cerr << "Random move: " << row << " " << col << std::endl;
+      sendMessage(std::to_string(row) + "," +
+                  std::to_string(col));
     }
     return true;
   }
@@ -111,7 +120,7 @@ bool MCTSAgent::interpretMessage(const std::string &s) {
   } else if (msg[0] == "CHANGE") {
     makeMove(board);
   } else if (msg[0] == "SWAP") {
-    std::cerr << "SWAP" << std::endl;
+    //std::cerr << "SWAP" << std::endl;
     colour = colour == "R" ? "B" : "R";
     makeMove(board);
   } else {
@@ -131,24 +140,28 @@ void MCTSAgent::makeMove(const std::string &board) const {
   auto [red_moves, blue_moves, open_moves] = convert_board_string(board, boardSize);
 
   if (turn == 1) {
-    // Make a random move
-    sendMessage(std::to_string(5) + "," +
-                std::to_string(5));
+    // Make a random move near the center
+    std::uniform_int_distribution<std::mt19937::result_type> coord_dist(3,7);
+    unsigned long row = coord_dist(rng);
+    unsigned long col = coord_dist(rng);
+    //std::cerr << "Random move: " << row << " " << col << std::endl;
+    sendMessage(std::to_string(row) + "," +
+                std::to_string(col));
     return;
   }
-  std::cerr << "Our agent is: " << colour << std::endl;
+  //std::cerr << "Our agent is: " << colour << std::endl;
   MCTSNode root(red_moves, blue_moves, open_moves, colour, nullptr, {-1, -1});
 
-  std::cerr << "Root node is made" << std::endl;
+  //std::cerr << "Root node is made" << std::endl;
   // Short circuit moves
   if (auto [heuristic_check_fst, heuristic_check_snd] = root.generate_all_children_nodes(); heuristic_check_fst != -1) {
-    std::cerr << "Heuristic short circuit" << std::endl;
+    //std::cerr << "Heuristic short circuit" << std::endl;
     sendMessage(std::to_string(heuristic_check_fst) + "," +
                 std::to_string(heuristic_check_snd));
     root.delete_children();
     return;
   }
-  std::cerr << "Children generated" << std::endl;
+  //std::cerr << "Children generated" << std::endl;
 
   int count = 0;
   constexpr double turn_time = 10000;
@@ -156,23 +169,38 @@ void MCTSAgent::makeMove(const std::string &board) const {
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::steady_clock::now().time_since_epoch())
           .count();
+  //std::cerr << "Starting loop" << std::endl;
   while (std::chrono::duration_cast<std::chrono::milliseconds>(
              std::chrono::steady_clock::now().time_since_epoch())
                  .count() -
              loop_start_time <
          static_cast<long>(turn_time)) {
-  //for (int i = 0; i < 10000; ++i) {
-    count++;
+    count += THREAD_COUNT;
     MCTSNode *node = root.best_child(EXPLORATION_CONSTANT);
-    const double result = node->simulate_from_node(colour);
-    if (result == 2.0) {
-      // This node is a win
-      // So short circuit the rest of the simulation
-      node->backpropagate(1000000);
-      break;
+
+    std::vector<std::thread> threads;
+    std::vector<std::future<double>> futures;
+    for (int i = 0; i < THREAD_COUNT; ++i) {
+      std::promise<double> promise;
+      futures.emplace_back(promise.get_future());
+      threads.emplace_back(
+      [&node, promise = std::move(promise), this]() mutable {
+        const double result = node->simulate_from_node();
+        promise.set_value(result);
+      });
     }
-    node->backpropagate(result);
-         }
+    // Wait for threads to finish
+    for (std::thread &t : threads) {
+      t.join();
+    }
+
+    // Get results from the threads and sum them
+    double result = 0;
+    for (auto &future : futures) {
+      result += future.get();
+    }
+    node->backpropagate(result, THREAD_COUNT);
+  }
   std::cerr << "iteration count: " << count << std::endl;
 
   auto [fst, snd] = root.get_best_move();
@@ -186,5 +214,5 @@ void MCTSAgent::makeMove(const std::string &board) const {
           .count();
 
   time_left_ms -= static_cast<double>(move_end_time_ms - move_start_time_ms);
-  std::cerr << "Time left: " << time_left_ms << std::endl;
+  //std::cerr << "Time left: " << time_left_ms << std::endl;
 }

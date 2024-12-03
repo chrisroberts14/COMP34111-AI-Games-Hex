@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := -Wall -Wextra -std=c++20 -g -lc
+CXXFLAGS := -Wall -Wextra -std=c++20 -g -lc -fstack-protector
 
 SRCS := $(wildcard *.cpp)
 
